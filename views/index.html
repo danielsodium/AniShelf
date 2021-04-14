@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>AniShelf (name subject to change)</title>
@@ -8,29 +9,53 @@
     <link rel="stylesheet" href="../assets/css/skeleton.css">
     <link rel="stylesheet" href="../assets/css/main.css">
 
-      <script src="../scripts/script.js"></script>    
+    <script src="../scripts/script.js"></script>
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
 </head>
+
 <body>
     <div id="left-bar" class="collapsed">
-        <button id="home-button" onclick="loadHome()">
-            <i class="fa fa-home"></i>
-            <span>Home</span>
-        </button>
+        <div style="margin-top: 20px;">
+            <button class="side-button hvr-radial-out" onclick="loadHome()">
+                <i class="fa fa-home fa-2x"></i>
+                <span>Home</span>
+            </button>
+        </div>
         <hr />
-        <button id="library-button" onclick="loadLibrary()">
-            <i class="fa fa-book"></i>
-            <span>Library</span>
-        </button>
-        <button id="search-button" onclick="loadSearch()"><i class="fa fa-search"></i>
-            <span>Search</span>
-        </button>
+        <div id="side-bar-list">
+            <button class="side-button hvr-radial-out" onclick="loadLibrary()">
+                <i class="fa fa-book fa-2x"></i>
+                <span>Library</span>
+            </button>
+            <button class="side-button hvr-radial-out" onclick="loadSearch()">
+                <i class="fa fa-search fa-2x"></i>
+                <span>Search</span>
+            </button>
+        </div>
         <hr />
         <section class="footer">
-            <button id="collapse" onclick="toggleNav()"><i class="fa fa-chevron-left"></i></button>
+            <button id="settings" class="hvr-radial-out" style="display:none" onclick="loadSettings()">
+                <i id="settings-icon" class="fa fa-cog fa-2x"></i>
+            </button>
+            <button id="collapse" class="hvr-radial-out" onclick="toggleNav()">
+                <i id="collapse-icon" class="fa fa-chevron-right fa-2x"></i>
+            </button>
         </section>
+
+    </div>
+    <div id="right-bar">
+        <div id="main"></div>
         
     </div>
-    <div id="right-bar"></div>
+    <div id="download">
+        <div>
+            <p id="download-title">Downloading Grand Blue Episode 002</p>
+            <div style="display:flex;justify-content: center;">
+                <p id="download-percent">0%</p>
+                <progress id="progress-bar" value="0" max="100"> 32% </progress>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>

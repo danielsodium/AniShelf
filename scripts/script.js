@@ -1,4 +1,5 @@
 const electron = require('electron');
+
 const https = require('https');
 const fs = require('fs');
 const htmlparser = require('node-html-parser')
@@ -11,14 +12,20 @@ const replaceText = (selector, text) => {
     if (element) element.innerText = text
 }
 
+loadSettings = function() {
+    $("#main").empty();
+    $("#main").load("settings.html")
+}
+
+
 loadHome = function() {
-    $("#right-bar").empty();
-    $("#right-bar").load("home.html")
+    $("#main").empty();
+    $("#main").load("home.html")
 }
 
 loadLibrary = function() {
-    $("#right-bar").empty();
-    $("#right-bar").load("library.html", function() {
+    $("#main").empty();
+    $("#main").load("library.html", function() {
         fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
             entries = JSON.parse(data).anime
             for (var i = 0; i < entries.length; i++) (function(i){ 
@@ -50,12 +57,14 @@ loadLibrary = function() {
 
 function viewOffline(title) {
     // Show info about downloaded anime
-    $("#right-bar").empty();
+    $("#main").empty();
     title = title;
     
-    $("#right-bar").load("view.html", function() {
+    $("#main").load("view.html", function() {
         fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
-            entry = JSON.parse(data).anime.find(element => element.title == title)
+            data = JSON.parse(data)
+            entryIndex = data.anime.findIndex(element => element.title == title)
+            entry = data.anime[entryIndex]
             episodes = entry.episodes
             
             document.getElementById("cover-img").src = entry.image
@@ -73,15 +82,50 @@ function viewOffline(title) {
                 })
                 newEp.appendChild(document.createTextNode(entry.episodes[i].name));
                 listItem.appendChild(newEp)
+
+                deleteLink = document.createElement("a");
+                deleteIcon = document.createElement("i");
+                deleteIcon.classList.add("fa")
+                deleteIcon.classList.add("fa-trash")
+                deleteLink.addEventListener('click', function() {
+                    deleteEpisode(data,entry, entryIndex, i, listItem)
+                    
+                })
+                deleteLink.appendChild(deleteIcon)
+                listItem.appendChild(deleteLink)
                 document.getElementById("ep-list").appendChild(listItem);
             })(i);
         })
     })
 }
 
+deleteEpisode = function(data,entry, entryIndex, i, el, el2) {
+    data = data;
+    entry = entry;
+    element = el;
+    uid = entry.episodes[i].id
+    let options  = {
+        buttons: ["Yes","Cancel"],
+        message: "Are you sure you want to delete this episode?"
+    }
+    let response = electron.remote.dialog.showMessageBox(options)
+    response.then(function(res) {
+        if (res.response == 0) {
+            data.anime[entryIndex].episodes.splice(data.anime[entryIndex].episodes.findIndex(element => element.name == entry.episodes[i].name), 1)
+            if (data.anime[entryIndex].episodes.length == 0) {
+                data.anime.splice(entryIndex, 1);
+            }
+            fs.writeFile(path+"/data.json", JSON.stringify(data), err => {
+                fs.unlinkSync(path+"/episodes/"+entry.title+"/"+uid+".mp4")
+                element.remove();
+            })
+        }
+    })
+}
+
 loadSearch = function() {
-    $("#right-bar").empty();
-    $("#right-bar").load("search.html", function() {
+    $("#main").empty();
+    $("#main").load("search.html", function() {
         var input = document.getElementById("searchTerm");
         input.addEventListener("keyup", function(event) {
             if (event.keyCode === 13) {
@@ -90,6 +134,7 @@ loadSearch = function() {
             }
         });
         document.getElementById("search").addEventListener('click', () => {
+            $("#results").empty();
             getMal(document.getElementById("searchTerm").value, function(res) {        
                 for (var i = 0; i < res.length; i++) (function(i){ 
                     res = res;
@@ -188,12 +233,9 @@ downloadEpisode = function(link, title, epName, image, desc) {
             }
             file = fs.createWriteStream(path+"/episodes/"+title+"/"+videoID+".mp4");
             https.get(link, function(response) {
-                response.pipe(file);
-                electron.ipcRenderer.invoke('show-notification', epName, true);
+                pipeDownload(response, file, epName);
             });
           })
-
-
     })
     /*
     file = fs.createWriteStream(path+"/episodes/"+title+"/"+videoID+".mp4");
@@ -204,14 +246,43 @@ downloadEpisode = function(link, title, epName, image, desc) {
 
 }
 
+function pipeDownload(inStream, fileStream, title) {
+    const fs = require('fs');
+    fileStream = fileStream;
+    // get total size of the file
+    let size = inStream.headers[ 'content-length' ]
+    document.getElementById("download-title").innerHTML = "Downloading "+ title;
+    document.getElementById("download").style.display = "block"
+    let written = 0;
+    inStream.on('data', data => {
+        // do the piping manually here.
+        fileStream.write(data, () => {
+            written += data.length;
+            var percent = (written/size*100).toFixed(2)
+            document.getElementById("progress-bar").value = percent;
+            document.getElementById("download-percent").innerHTML = percent+"%";
+            if (percent == 100) {
+                document.getElementById("download").style.display = "none"
+            }
+            console.log(`written ${written} of ${size} bytes (${(written/size*100).toFixed(2)}%)`);
+        });
+    });
+}
+
 function toggleNav() {
     if (document.getElementById("left-bar").style.width === "200px") {
         document.getElementById("left-bar").style.width = "50px";
         document.getElementById("right-bar").style.marginLeft = "100px";
+        document.getElementById("settings").style.display = "none";
+        document.getElementById("collapse-icon").classList.remove("fa-chevron-left")
+        document.getElementById("collapse-icon").classList.add("fa-chevron-right")
         document.getElementById("left-bar").classList.add("collapsed")
     } else {
         document.getElementById("left-bar").style.width = "200px";
         document.getElementById("right-bar").style.marginLeft = "250px";
+        document.getElementById("settings").style.display = "block";
+        document.getElementById("collapse-icon").classList.add("fa-chevron-left")
+        document.getElementById("collapse-icon").classList.remove("fa-chevron-right")
         document.getElementById("left-bar").classList.remove("collapsed")
     }
     
@@ -219,10 +290,10 @@ function toggleNav() {
 
 function searchRes(link) {
     // Show info about anime
-    $("#right-bar").empty();
+    $("#main").empty();
     link = link;
     
-    $("#right-bar").load("view.html", function() {
+    $("#main").load("view.html", function() {
         getData("https://animax.to"+link, function(info) {
             root = htmlparser.parse(info)
             episodes = root.querySelectorAll("table.table tbody tr a")

@@ -1,12 +1,10 @@
-
 @import url("https://use.typekit.net/eyp4egm.css");
 @import url("../fonts/open-iconic.min.css");
-
 @font-face {
-  font-family: "nunitolight";
-  src: url("../fonts/nunito-light-webfont.woff2") format("woff2"), url("./assets/fonts/nunito-light-webfont.woff") format("woff");
-  font-weight: normal;
-  font-style: normal;
+    font-family: "nunitolight";
+    src: url("../fonts/nunito-light-webfont.woff2") format("woff2"), url("./assets/fonts/nunito-light-webfont.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
 }
 
 a:hover {
@@ -14,8 +12,17 @@ a:hover {
 }
 
 * {
-    font-family: "nunitolight";
-    //background-color: #f5f5dc;
+    font-family: "nunitolight"; //background-color: #f5f5dc;
+}
+
+p {
+    margin: 0px;
+}
+
+button span {
+    font-size: 14pt;
+    text-transform: none;
+    font-family: "poiret-one", Avenir, Helvetica, Arial, sans-serif !important;
 }
 
 h1 {
@@ -27,24 +34,57 @@ body {
     margin: 0px;
 }
 
+#download {
+    display: none;
+    margin-left: 70px;
+    position: fixed;
+    width: 100%;
+    z-index: 1;
+    bottom: 0;
+    height: 70px;
+    box-shadow: 2px -3px 2px #888888;
+    padding-top: 20px;
+    background-color: white;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+#download-percent {
+    margin: 0px;
+}
+
+progress {
+    width: 60%;
+    margin-left: 10px;
+    margin-top: 3px;
+}
+
 #left-bar {
-  height: 100%; /* 100% Full-height */
-  width: 50px; /* 0 width - change this with JavaScript */
-  position: fixed; /* Stay in place */
-  z-index: 1; /* Stay on top */
-  top: 0;
-  left: 0;
-  box-shadow: 2px 5px 8px #888888;
-  overflow-x: hidden; /* Disable horizontal scroll */
-  padding: 10px;
-  transition: 0.5s; /* 0.5 second transition effect to slide in the sidebar */
+    height: 100%;
+    /* 100% Full-height */
+    width: 50px;
+    /* 0 width - change this with JavaScript */
+    position: fixed;
+    /* Stay in place */
+    z-index: 1;
+    /* Stay on top */
+    top: 0;
+    left: 0;
+    box-shadow: 2px 5px 8px #888888;
+    overflow-x: hidden;
+    /* Disable horizontal scroll */
+    padding: 10px;
+    transition: 0.5s;
+    /* 0.5 second transition effect to slide in the sidebar */
 }
 
 #right-bar {
-  margin-left: 100px;
-  margin-top: 30px;
-  transition: margin-left .5s; /* If you want a transition effect */
-  padding: 20px;
+    margin-left: 100px;
+    margin-top: 30px;
+    transition: margin-left .5s;
+    /* If you want a transition effect */
+    padding: 20px;
 }
 
 ul#results li {
@@ -54,13 +94,14 @@ ul#results li {
     display: list-item;
     box-sizing: border-box;
 }
+
 ul#results li:hover {
     cursor: pointer;
 }
 
 hr {
     margin: 20px 5px 20px 5px;
-    border-color:darkgray;
+    border-color: darkgray;
 }
 
 #results {
@@ -103,44 +144,101 @@ ul#results li .name {
     box-sizing: border-box;
     text-overflow: ellipsis;
 }
+
 #collapse {
-    width: 100%;
+    width: 50%;
     margin-left: 0.5rem;
     padding: 0.5rem;
     border: 0;
-    text-align:right;
     line-height: 10px;
 }
 
-.collapsed span{
-    display: none !important;
+.fa-trash {
+    margin-left: 20px;
 }
-#home-button {
-    height: 50px;
-    margin-top: 20px;
-    padding: 0px;
-    margin-bottom: 0px;
+
+#settings {
+    width: 50%;
+    float: left;
+    margin-left: 0.5rem;
+    padding: 0.5rem;
+    border: 0;
+    line-height: 10px;
+}
+
+.collapsed #collapse{
     width: 100%;
 }
 
-#library-button {
-    height: 50px;
-    padding: 0px;
-    width: 100%;
-    margin-bottom: 10px;
+.collapsed span {
+    display: none !important;
 }
-#search-button {
+
+.side-button {
     height: 50px;
     padding: 0px;
     width: 100%;
     margin: 0px;
+    border: 0px;
+    background-color: transparent;
+}
+/* Radial Out */
+.hvr-radial-out {
+    display: inline-block;
+    vertical-align: middle;
+    -webkit-transform: perspective(1px) translateZ(0);
+    transform: perspective(1px) translateZ(0);
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+    -webkit-transition-property: color;
+    transition-property: color;
+    -webkit-transition-duration: 0.1s;
+    transition-duration: 0.1s;
+  }
+  .hvr-radial-out:before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #e2e2e2;
+    border-radius: 100%;
+    -webkit-transform: scale(0);
+    transform: scale(0);
+    -webkit-transition-property: transform;
+    transition-property: transform;
+    -webkit-transition-duration: 0.1s;
+    transition-duration: 0.1s;
+    -webkit-transition-timing-function: ease-out;
+    transition-timing-function: ease-out;
+  }
+  .hvr-radial-out:hover, .hvr-radial-out:focus, .hvr-radial-out:active {
+    color: black;
+  }
+  .hvr-radial-out:hover:before, .hvr-radial-out:focus:before, .hvr-radial-out:active:before {
+    -webkit-transform: scale(2);
+    transform: scale(2);
+  }
+
+
+.side-button i {
+    margin-top: 10px;
+}
+
+.side-button span {
+    margin-left: 5px;
 }
 
 .search-bar button {
     width: 50px;
     padding: 0px;
 }
-.search-bar input{
+
+.search-bar input {
     width: calc(80% - 60px);
 }
 
@@ -156,6 +254,5 @@ ul#results li .name {
     padding: 0.5rem 1rem;
     height: 50px;
     font-size: 16px;
-    display: flex;
-    align-items: center;
+    display:flex;   
 }
