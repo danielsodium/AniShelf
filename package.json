@@ -1,8 +1,8 @@
 {
-  "name": "my-electron-app",
+  "name": "Anishelf",
   "version": "0.1.0",
   "author": "your name",
-  "description": "My Electron app",
+  "description": "Anime library manager",
   "main": "./scripts/main.js",
   "scripts": {
     "start": "electron .",
