@@ -1,16 +1,21 @@
 
 @import url("https://use.typekit.net/eyp4egm.css");
-@import url("./assets/fonts/open-iconic.min.css");
+@import url("../fonts/open-iconic.min.css");
 
 @font-face {
   font-family: "nunitolight";
-  src: url("./assets/fonts/nunito-light-webfont.woff2") format("woff2"), url("./assets/fonts/nunito-light-webfont.woff") format("woff");
+  src: url("../fonts/nunito-light-webfont.woff2") format("woff2"), url("./assets/fonts/nunito-light-webfont.woff") format("woff");
   font-weight: normal;
   font-style: normal;
 }
 
+a:hover {
+    cursor: pointer;
+}
+
 * {
-    font-family: "nunitolight"
+    font-family: "nunitolight";
+    //background-color: #f5f5dc;
 }
 
 h1 {
@@ -54,7 +59,8 @@ ul#results li:hover {
 }
 
 hr {
-    margin: 10px
+    margin: 20px 5px 20px 5px;
+    border-color:darkgray;
 }
 
 #results {
@@ -98,17 +104,33 @@ ul#results li .name {
     text-overflow: ellipsis;
 }
 #collapse {
-    padding: 0px;
     width: 100%;
-    margin: 0px;
-    margin-top: 20px;
+    margin-left: 0.5rem;
+    padding: 0.5rem;
+    border: 0;
+    text-align:right;
+    line-height: 10px;
+}
+
+.collapsed span{
+    display: none !important;
 }
 #home-button {
+    height: 50px;
+    margin-top: 20px;
+    padding: 0px;
+    margin-bottom: 0px;
+    width: 100%;
+}
+
+#library-button {
+    height: 50px;
     padding: 0px;
     width: 100%;
     margin-bottom: 10px;
 }
 #search-button {
+    height: 50px;
     padding: 0px;
     width: 100%;
     margin: 0px;
@@ -124,4 +146,16 @@ ul#results li .name {
 
 #ep-list {
     list-style-type: none;
+}
+
+.footer {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    padding: 0.5rem 1rem;
+    height: 50px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
 }

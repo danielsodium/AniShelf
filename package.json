@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "author": "your name",
   "description": "My Electron app",
-  "main": "main.js",
+  "main": "./scripts/main.js",
   "scripts": {
     "start": "electron .",
     "package": "electron-forge package",

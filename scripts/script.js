@@ -11,6 +11,10 @@ const replaceText = (selector, text) => {
     if (element) element.innerText = text
 }
 
+loadHome = function() {
+    $("#right-bar").empty();
+    $("#right-bar").load("home.html")
+}
 
 loadLibrary = function() {
     $("#right-bar").empty();
@@ -204,9 +208,11 @@ function toggleNav() {
     if (document.getElementById("left-bar").style.width === "200px") {
         document.getElementById("left-bar").style.width = "50px";
         document.getElementById("right-bar").style.marginLeft = "100px";
+        document.getElementById("left-bar").classList.add("collapsed")
     } else {
         document.getElementById("left-bar").style.width = "200px";
         document.getElementById("right-bar").style.marginLeft = "250px";
+        document.getElementById("left-bar").classList.remove("collapsed")
     }
     
 }
@@ -236,10 +242,10 @@ function searchRes(link) {
                     //downloadEpisode("https://animax.to"+root.querySelector(".message-body img").attrs.rc)
                     downloadEpisode("https://www.sample-videos.com/video123/mp4/240/big_buck_bunny_240p_1mb.mp4", title, episodes[i].text, "https://animax.to"+root.querySelector(".message-body img").attrs.rc, descT[descT.length-1].text)
                     //downloadEpisode(episodes[i].attrs.href)
-                })
+                }) 
                 newEp.appendChild(document.createTextNode(episodes[i].text));
                 listItem.appendChild(newEp)
-                document.getElementById("ep-list").appendChild(listItem);
+                document.getElementById("ep-list").appendChild(listItem); 
             })(i);
         })
     })
@@ -248,7 +254,7 @@ function searchRes(link) {
 window.onload=function(){
     // Load main content
     $(function(){
-        loadLibrary();
+        loadHome();
     })
     
 }
