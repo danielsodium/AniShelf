@@ -1,22 +1,77 @@
 const electron = require('electron');
-
 const https = require('https');
+const http = require('http')
 const fs = require('fs');
 const htmlparser = require('node-html-parser')
 const $ = require('jquery');
-const uuid = require('uuid')
+const uuid = require('uuid');
 const path = (electron.app || electron.remote.app).getPath('userData')+"/AppStorage"
+const Stream = require('stream').Transform,
+
+downloadQueue = [];
+
+settings = {};
+
+loadSettingsFile = function() {
+    fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
+        data = JSON.parse(data)
+        settings = data.settings;
+    })
+}
+
+saveSettingsFile = function() {
+    fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
+        data = JSON.parse(data)
+        data.settings = settings;
+        console.log(data)
+        fs.writeFile(path+"/data.json", JSON.stringify(data), err => {
+            console.log("Saved!")
+        })
+    })
+}
+
+toggleSetting = function(setting) {
+    settings[setting] = !settings[setting];
+    saveSettingsFile();
+}
+
+checkDownloadStarted = function() {
+    if (downloadQueue.length == 1) {
+        downloadData = downloadQueue[0]
+        downloadEpisode(downloadData[0], downloadData[1], downloadData[2], downloadData[3],downloadData[4])
+    }
+}
 
 const replaceText = (selector, text) => {
     const element = document.getElementById(selector)
     if (element) element.innerText = text
 }
 
-loadSettings = function() {
+loadQueue = function() {
     $("#main").empty();
-    $("#main").load("settings.html")
+    $("#main").load("queue.html", function() {
+        updateQueueHTML();
+    })
 }
 
+loadSettings = function() {
+    $("#main").empty();
+    $("#main").load("settings.html", function() {
+        document.getElementById("toggleDev").checked = settings.devMode;
+        document.getElementById("toggleExternal").checked = settings.openExternal;
+    })
+}
+
+loadPlay = function(file) {
+    if (settings.openExternal) electron.shell.openPath(file)
+    else {
+        $("#main").empty();
+        $("#main").load("play.html", function() {
+            document.getElementById("vid-src").src = file;
+            document.getElementById("vid").play();
+        })
+    }
+}
 
 loadHome = function() {
     $("#main").empty();
@@ -77,7 +132,8 @@ function viewOffline(title) {
                 newEp = document.createElement("a");
                 newEp.addEventListener('click', function() {
                     //downloadEpisode("https://animax.to"+root.querySelector(".message-body img").attrs.rc)
-                    electron.shell.openPath(path+"/episodes/"+entry.title+"/"+entry.episodes[i].id+".mp4")
+                    loadPlay(path+"/episodes/"+entry.title.replace(/[\W_]+/g,"-")+"/"+entry.episodes[i].id+".mp4");
+                    //electron.shell.openPath(path+"/episodes/"+entry.title+"/"+entry.episodes[i].id+".mp4")
                     //downloadEpisode(episodes[i].attrs.href)
                 })
                 newEp.appendChild(document.createTextNode(entry.episodes[i].name));
@@ -116,7 +172,7 @@ deleteEpisode = function(data,entry, entryIndex, i, el, el2) {
                 data.anime.splice(entryIndex, 1);
             }
             fs.writeFile(path+"/data.json", JSON.stringify(data), err => {
-                fs.unlinkSync(path+"/episodes/"+entry.title+"/"+uid+".mp4")
+                fs.unlinkSync(path+"/episodes/"+entry.title.replace(/[\W_]+/g,"-")+"/"+uid+".mp4")
                 element.remove();
             })
         }
@@ -135,7 +191,7 @@ loadSearch = function() {
         });
         document.getElementById("search").addEventListener('click', () => {
             $("#results").empty();
-            getMal(document.getElementById("searchTerm").value, function(res) {        
+            getGoGo(document.getElementById("searchTerm").value, function(res) {        
                 for (var i = 0; i < res.length; i++) (function(i){ 
                     res = res;
                     var searchdiv = document.createElement("li")
@@ -165,18 +221,31 @@ loadSearch = function() {
 }
 
 getData = function(link, callback) {
-    https.get(link, function(response) {  
-        var info = "";
-        response.on('data', function(response) {
-            info+=response;
+    if (link.indexOf("https") == -1) {
+        http.get(link, function(response) {  
+            var info = "";
+            response.on('data', function(response) {
+                info+=response;
+            })
+            response.on('end', function() {
+               callback(info)
+            })
         })
-        response.on('end', function() {
-           callback(info)
+    } else {
+        https.get(link, function(response) {  
+            var info = "";
+            response.on('data', function(response) {
+                info+=response;
+            })
+            response.on('end', function() {
+               callback(info)
+            })
         })
-    })
+    }
+    
 }
 
-getMal = function(searchTerm, callback) {
+getAnimax = function(searchTerm, callback) {
     getData("https://animax.to/?c=search&q="+searchTerm, function(info) {
         root = htmlparser.parse(info)
         var returner = [];
@@ -193,11 +262,40 @@ getMal = function(searchTerm, callback) {
     })
 }
 
+getGoGo = function(searchTerm, callback) {
+    getData("https://www1.gogoanime.ai/search.html?keyword="+encodeURI(searchTerm), function(data) {
+        root = htmlparser.parse(data)
+        var returner = [];
+        elements = root.querySelectorAll(".items li")
+        for (var i = 0; i < elements.length; i++) {
+            returner.push({
+                link : elements[i].querySelector(".name a").attrs.href,
+                title : elements[i].querySelector(".name a").innerText.trim(),
+                img : elements[i].querySelector("img").attrs.src
+            })    
+        }
+        callback(returner);
+    }) 
+}
+
 downloadEpisode = function(link, title, epName, image, desc) {
     electron.ipcRenderer.invoke('show-notification', epName, false);
     videoID = uuid.v4()
-    if (!fs.existsSync(path+"/episodes/"+title)){
-        fs.mkdirSync(path+"/episodes/"+title);
+    console.log(fs.existsSync(path+"/episodes/"))
+    if (!fs.existsSync(path+"/episodes/"+title.replace(/[\W_]+/g,"-"))){
+        fs.mkdirSync(path+"/episodes/"+title.replace(/[\W_]+/g,"-"));
+        console.log(image)
+        // Doesn't matter if this happens before or after, so save me the trouble of doing callbacks for the rest lol
+        https.get(image, function(response) {   
+            var data = new Stream();
+            response.on('data', function(chunk) {                                       
+                data.push(chunk);                                                         
+            });                                                                         
+        
+            response.on('end', function() {                                             
+                fs.writeFileSync(path+"/images/"+title.replace(/[\W_]+/g,"-")+".png", data.read());                            
+            });  
+        }).end();
     }
     fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
         if (err) {
@@ -210,7 +308,7 @@ downloadEpisode = function(link, title, epName, image, desc) {
         if (entry == -1) {
             animeList.anime.push({
                 title: title,
-                image: image,
+                image: path+"/images/"+title.replace(/[\W_]+/g,"-")+".png",
                 desc: desc,
                 episodes: [{
                     name: epName,
@@ -231,10 +329,17 @@ downloadEpisode = function(link, title, epName, image, desc) {
               console.error(err)
               return;
             }
-            file = fs.createWriteStream(path+"/episodes/"+title+"/"+videoID+".mp4");
-            https.get(link, function(response) {
-                pipeDownload(response, file, epName);
-            });
+            file = fs.createWriteStream(path+"/episodes/"+title.replace(/[\W_]+/g,"-")+"/"+videoID+".mp4");
+            if (link.indexOf("https") == -1) {
+                http.get(link, function(response) {
+                    pipeDownload(response, file, epName);
+                });
+            } else {
+                https.get(link, function(response) {
+                    pipeDownload(response, file, epName);
+                });
+            }
+            
           })
     })
     /*
@@ -246,23 +351,86 @@ downloadEpisode = function(link, title, epName, image, desc) {
 
 }
 
+downloadGoGo = function(link, title, epNum, img, desc) {
+    getData("https://www1.gogoanime.ai/"+link.slice(9)+"-episode-"+epNum, function(data) {
+        root = htmlparser.parse(data)
+        getData("https:"+root.querySelector(".vidcdn a").attrs["data-video"], function(data) {
+            root = htmlparser.parse(data)
+            textChunk = root.querySelector(".wrapper .videocontent script").innerText.trim()
+            var edited = textChunk.substring(textChunk.indexOf("sources:[{file: 'https://storage")+17, textChunk.indexOf(",label:")-1)
+            console.log("Downloading " + edited)
+            downloadQueue.push([edited, title, "Episode "+epNum, img, desc]);
+            updateQueueHTML();
+            checkDownloadStarted();
+        })
+    })
+
+}
+
+updateQueueHTML = function() {
+    if (downloadQueue.length != 0) {
+        document.getElementById("download-title").innerHTML = downloadQueue[0][1]+downloadQueue[0][2];
+        if (downloadQueue.length > 1) {
+            
+        }
+    } else {
+        $("#main").empty();
+    }
+}
+
+/*
+downloadGoGo = function(link, title, epNum, img, desc) {
+    if (document.getElementById("ep_"+epNum).children.length == 1) {
+        getData("https://www1.gogoanime.ai/"+link.slice(9)+"-episode-"+epNum, function(data) {
+            root = htmlparser.parse(data)
+            getData(root.querySelector(".dowloads a").attrs.href, function(data) {
+                root = htmlparser.parse(data)
+                elements = (root.querySelectorAll(".dowload a"))
+                links = []
+                listedLinks = document.createElement("ul")
+                for (var i = 0; i < elements.length; i++) (function(i) {
+                    var type = elements[i].innerHTML.substring(8, elements[i].innerHTML.length)
+                    var downloadBullet = document.createElement("li")
+                    var downloadLink = document.createElement("a")
+                    var textNode = document.createTextNode(type.trim())
+                    downloadLink.addEventListener('click', function() {
+                        downloadEpisode(elements[i].attrs.href, title, title+" EP_"+epNum, img, desc)
+                    }) 
+
+                    downloadLink.appendChild(textNode)
+                    downloadBullet.appendChild(downloadLink)
+                    listedLinks.appendChild(downloadBullet)
+                })(i)
+                document.getElementById("ep_"+epNum).appendChild(listedLinks)
+            })
+        })
+    }
+    
+ 
+}
+*/
 function pipeDownload(inStream, fileStream, title) {
     const fs = require('fs');
     fileStream = fileStream;
     // get total size of the file
     let size = inStream.headers[ 'content-length' ]
-    document.getElementById("download-title").innerHTML = "Downloading "+ title;
-    document.getElementById("download").style.display = "block"
     let written = 0;
     inStream.on('data', data => {
         // do the piping manually here.
         fileStream.write(data, () => {
             written += data.length;
-            var percent = (written/size*100).toFixed(2)
-            document.getElementById("progress-bar").value = percent;
-            document.getElementById("download-percent").innerHTML = percent+"%";
+            var percent = Math.floor((written/size*100).toFixed(2));
+            if (document.getElementById("progress-bar")) {
+                document.getElementById("progress-bar").value = percent;
+                document.getElementById("download-percent").innerHTML = percent+"%";
+            }
             if (percent == 100) {
-                document.getElementById("download").style.display = "none"
+                downloadQueue.shift();
+                if (downloadQueue.length > 0) {
+                    downloadData = downloadQueue[0]
+                    updateQueueHTML();
+                    downloadEpisode(downloadData[0], downloadData[1], downloadData[2], downloadData[3],downloadData[4])
+                }
             }
             console.log(`written ${written} of ${size} bytes (${(written/size*100).toFixed(2)}%)`);
         });
@@ -288,6 +456,50 @@ function toggleNav() {
     
 }
 
+function searchRes(link) {
+    // Show info about anime
+    $("#main").empty();
+    link = link;
+    
+    $("#main").load("view.html", function() {
+        console.log("https://www1.gogoanime.ai"+link)
+        getData("https://www1.gogoanime.ai"+link, function(info) {
+            root = htmlparser.parse(info)
+            episodes = root.querySelector("#episode_page li .active").attrs.ep_end
+            console.log(episodes)
+            document.getElementById("cover-img").src = root.querySelector(".anime_info_body_bg img").attrs.src
+            var title = root.querySelector(".anime_info_body_bg h1").text
+            replaceText("anime-title", title)
+
+            var descT = root.querySelectorAll(".anime_info_body_bg .type")[1]
+            replaceText("description",  descT.text)
+
+            // For some reason animax puts latest first so let's swap order
+            for (var i = 0; i < parseInt(episodes); i++) (function(i) {
+                listItem = document.createElement("li");
+                listItem.id = "ep_"+(i+1);
+                newEp = document.createElement("a");
+                newEp.addEventListener('click', function() {
+                    if (settings.devMode) {
+                        downloadQueue.push(["https://www.w3schools.com/html/mov_bbb.mp4", title, i+1, root.querySelector(".anime_info_body_bg img").attrs.src, descT.text]);
+                        updateQueueHTML();
+                        checkDownloadStarted();
+                    } else {
+                        downloadGoGo(link, title, i+1, root.querySelector(".anime_info_body_bg img").attrs.src, descT.text);
+                    }
+                    //downloadEpisode("https://animax.to"+root.querySelector(".message-body img").attrs.rc)
+                    //downloadEpisode("https://www.sample-videos.com/video123/mp4/240/big_buck_bunny_240p_1mb.mp4", title, i+1, root.querySelector(".anime_info_body_bg img").attrs.src, descT.text)
+                    //downloadEpisode(episodes[i].attrs.href)
+                }) 
+                newEp.appendChild(document.createTextNode("Episode "+ (i+1)));
+                listItem.appendChild(newEp)
+                document.getElementById("ep-list").appendChild(listItem); 
+            })(i);
+        })
+    })
+}
+
+/*
 function searchRes(link) {
     // Show info about anime
     $("#main").empty();
@@ -321,10 +533,11 @@ function searchRes(link) {
         })
     })
 }
-
+*/
 window.onload=function(){
     // Load main content
     $(function(){
+        loadSettingsFile();
         loadHome();
     })
     

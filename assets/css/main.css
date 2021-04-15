@@ -51,13 +51,13 @@ body {
 }
 
 #download-percent {
-    margin: 0px;
+    margin-left: 20px;
 }
 
 progress {
     width: 60%;
+    height: 20px;
     margin-left: 10px;
-    margin-top: 3px;
 }
 
 #left-bar {
@@ -154,7 +154,9 @@ ul#results li .name {
 }
 
 .fa-trash {
-    margin-left: 20px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-top: -5px;
 }
 
 #settings {
@@ -165,6 +167,8 @@ ul#results li .name {
     border: 0;
     line-height: 10px;
 }
+
+
 
 .collapsed #collapse{
     width: 100%;
@@ -182,8 +186,9 @@ ul#results li .name {
     border: 0px;
     background-color: transparent;
 }
+
 /* Radial Out */
-.hvr-radial-out {
+button {
     display: inline-block;
     vertical-align: middle;
     -webkit-transform: perspective(1px) translateZ(0);
@@ -197,7 +202,7 @@ ul#results li .name {
     -webkit-transition-duration: 0.1s;
     transition-duration: 0.1s;
   }
-  .hvr-radial-out:before {
+  button:before {
     content: "";
     position: absolute;
     z-index: -1;
@@ -216,10 +221,10 @@ ul#results li .name {
     -webkit-transition-timing-function: ease-out;
     transition-timing-function: ease-out;
   }
-  .hvr-radial-out:hover, .hvr-radial-out:focus, .hvr-radial-out:active {
+  button:hover {
     color: black;
   }
-  .hvr-radial-out:hover:before, .hvr-radial-out:focus:before, .hvr-radial-out:active:before {
+  button:hover:before {
     -webkit-transform: scale(2);
     transform: scale(2);
   }
@@ -235,6 +240,7 @@ ul#results li .name {
 
 .search-bar button {
     width: 50px;
+    margin-bottom: 7px;
     padding: 0px;
 }
 
@@ -255,4 +261,35 @@ ul#results li .name {
     height: 50px;
     font-size: 16px;
     display:flex;   
+}
+
+video:focus {
+    outline: none;
+}
+
+#current-download {
+    margin-bottom: 40px;
+    display: flex;
+}
+
+#queue {
+    list-style: none;
+}
+
+/* Scroll Bar */
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    border-radius: 5px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: white;
+    border: 2px solid gray;
+    border-radius: 5px;
 }
