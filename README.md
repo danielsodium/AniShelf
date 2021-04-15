@@ -2,7 +2,7 @@
 
 Anishelf is an electron application that downloads anime episodes. I couldn't find any pre-existing anime downloader that had a clean UI, so I decided to create my own. This was also my first time using electron.js.
 
-![Library](images/library.png?raw=true Library)
+![Library](https://github.com/danielsodium/AniShelf/blob/main/images/library.png)
 
 ## Installation
 Download the latest .exe from releases.
