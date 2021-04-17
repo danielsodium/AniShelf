@@ -7,6 +7,7 @@ function createWindow () {
     height: 700,
     webPreferences: {
       nodeIntegration: true,
+      webSecurity: false,
       contextIsolation: false,
       enableRemoteModule: true,
       preload: path.join(__dirname, 'preload.js')

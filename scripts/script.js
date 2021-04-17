@@ -6,7 +6,7 @@ const htmlparser = require('node-html-parser')
 const $ = require('jquery');
 const uuid = require('uuid');
 const path = (electron.app || electron.remote.app).getPath('userData')+"/AppStorage"
-const Stream = require('stream').Transform,
+const Stream = require('stream').Transform;
 
 downloadQueue = [];
 
@@ -191,7 +191,7 @@ loadSearch = function() {
         });
         document.getElementById("search").addEventListener('click', () => {
             $("#results").empty();
-            getGoGo(document.getElementById("searchTerm").value, function(res) {        
+            getFour(document.getElementById("searchTerm").value, function(res) {        
                 for (var i = 0; i < res.length; i++) (function(i){ 
                     res = res;
                     var searchdiv = document.createElement("li")
@@ -209,7 +209,7 @@ loadSearch = function() {
                     searchdiv.appendChild(name)
                     var linked = document.createElement("a")
                     linked.addEventListener('click', function() {
-                        searchRes(res[i].link)
+                        searchResFour(res[i].link)
                     })
                     linked.appendChild(searchdiv)
                     document.getElementById("results").appendChild(linked);
@@ -262,6 +262,23 @@ getAnimax = function(searchTerm, callback) {
     })
 }
 
+getFour = function(searchTerm, callback) {
+    getData("https://4anime.to/?s="+encodeURI(searchTerm.split(' ').join('+')), function(data) {
+        root = htmlparser.parse(data);
+        var returner = [];
+        var links = root.querySelectorAll(".container #headerDIV_2");
+        for (var i = 1; i < links.length; i++) {
+            returner.push({
+                link : links[i].querySelector("a").attrs.href,
+                title : links[i].querySelector("a div").text,
+                img : links[i].querySelector("a img").attrs.src
+            }) 
+        }
+        callback(returner);
+    }) 
+}
+
+
 getGoGo = function(searchTerm, callback) {
     getData("https://www1.gogoanime.ai/search.html?keyword="+encodeURI(searchTerm), function(data) {
         root = htmlparser.parse(data)
@@ -276,6 +293,22 @@ getGoGo = function(searchTerm, callback) {
         }
         callback(returner);
     }) 
+}
+
+getAnimeout = function(searchTerm, callback) {
+    getData("https://animeout.xyz/?s="+encodeURI(searchTerm.split(' ').join('+')), function(data) {
+        var returner = [];
+        root = htmlparser.parse(data)
+        links = root.querySelectorAll(".wrap-content .row article .post-content")
+        for (var i = 0; i < links.length; i++) {
+            returner.push({
+                img : "",//links[i].querySelector(".post-image a img").attrs.src,
+                link : links[i].querySelector("h3 a").attrs.href,
+                title: links[i].querySelector("h3").text
+            })
+        }
+        callback(returner);
+    })
 }
 
 downloadEpisode = function(link, title, epName, image, desc) {
@@ -367,6 +400,52 @@ downloadGoGo = function(link, title, epNum, img, desc) {
 
 }
 
+getFourEp = function(link, callback) {
+    var getDa = require('follow-redirects').https;
+
+    var options = {
+      'method': 'GET',
+      'hostname': '4anime.to',
+      'path': link,
+      'headers': {
+        'Cookie': '__cfduid=d8f30551cdf7b386613e3afb7a42d92a61618620457'
+      },
+      'maxRedirects': 20
+    };
+    
+    var req = getDa.request(options, function (res) {
+      var chunks = [];
+    
+      res.on("data", function (chunk) {
+        chunks.push(chunk);
+      });
+    
+      res.on("end", function (chunk) {
+        var body = Buffer.concat(chunks);
+        callback(body.toString());
+      });
+    
+      res.on("error", function (error) {
+        console.error(error);
+      });
+    });
+    
+    req.end();
+}
+
+downloadFour = function(link, title, epNum, img, desc) {
+    getFourEp(link.substring(17), function(data) {
+        root = htmlparser.parse(data);
+        downloadQueue.push([root.querySelector("video source").attrs.src, title, title+ " " +epNum, img, desc]);
+        updateQueueHTML();
+        checkDownloadStarted();
+    })   
+    //root = htmlparser.parse(data)
+    //console.log(root.querySelector("video source").attrs.src);
+
+}
+
+
 updateQueueHTML = function() {
     if (downloadQueue.length != 0) {
         document.getElementById("download-title").innerHTML = downloadQueue[0][1]+downloadQueue[0][2];
@@ -375,6 +454,7 @@ updateQueueHTML = function() {
         }
     } else {
         $("#main").empty();
+        $("#main").load('emptyqueue.html');
     }
 }
 
@@ -456,6 +536,45 @@ function toggleNav() {
     
 }
 
+function searchResFour(link) {
+    // Show info about anime
+    $("#main").empty();
+    link = link;
+    
+    $("#main").load("view.html", function() {
+        getData(link, function(data) {
+            root = htmlparser.parse(data);
+            cover = "https://4anime.to"+root.querySelector(".cover img").attrs.src
+            document.getElementById("cover-img").src = cover
+
+            console.log(cover)
+            title = root.querySelector(".titlemobile1 center").text
+            replaceText("anime-title", title)
+            desc = root.querySelectorAll("#description-mob p")
+            descT = "";
+            for (var i = 0; i < desc.length; i++) descT += desc[i].text
+            replaceText("description",  descT)
+            var episodes = root.querySelectorAll(".episodes li a");
+            for (var i = 0; i < episodes.length; i++) (function(i) {
+                listItem = document.createElement("li");
+                newEp = document.createElement("a");
+                newEp.addEventListener('click', function() {
+                    if (settings.devMode) {
+                        downloadQueue.push(["https://www.w3schools.com/html/mov_bbb.mp4", title, "EP "+ episodes[i].text.trim(), cover, descT]);
+                        updateQueueHTML();
+                        checkDownloadStarted();
+                    } else {
+                        downloadFour(episodes[i].attrs.href, title, "EP "+ episodes[i].text.trim(), cover, descT.text);
+                    }
+                }) 
+                newEp.appendChild(document.createTextNode("EP "+ (episodes[i].text.trim())));
+                listItem.appendChild(newEp)
+                document.getElementById("ep-list").appendChild(listItem); 
+            })(i)
+        })
+    })
+}
+
 function searchRes(link) {
     // Show info about anime
     $("#main").empty();
@@ -499,41 +618,7 @@ function searchRes(link) {
     })
 }
 
-/*
-function searchRes(link) {
-    // Show info about anime
-    $("#main").empty();
-    link = link;
-    
-    $("#main").load("view.html", function() {
-        getData("https://animax.to"+link, function(info) {
-            root = htmlparser.parse(info)
-            episodes = root.querySelectorAll("table.table tbody tr a")
-            
-            document.getElementById("cover-img").src = "https://animax.to"+root.querySelector(".message-body img").attrs.rc
-            var title = root.querySelector("h1 a").text
-            replaceText("anime-title", title)
 
-            var descT = root.querySelectorAll(".message-body span")
-            replaceText("description",  descT[descT.length-1].text)
-
-            // For some reason animax puts latest first so let's swap order
-            for (var i = episodes.length-1; i >= 0; i--) (function(i) {
-                listItem = document.createElement("li");
-                newEp = document.createElement("a");
-                newEp.addEventListener('click', function() {
-                    //downloadEpisode("https://animax.to"+root.querySelector(".message-body img").attrs.rc)
-                    downloadEpisode("https://www.sample-videos.com/video123/mp4/240/big_buck_bunny_240p_1mb.mp4", title, episodes[i].text, "https://animax.to"+root.querySelector(".message-body img").attrs.rc, descT[descT.length-1].text)
-                    //downloadEpisode(episodes[i].attrs.href)
-                }) 
-                newEp.appendChild(document.createTextNode(episodes[i].text));
-                listItem.appendChild(newEp)
-                document.getElementById("ep-list").appendChild(listItem); 
-            })(i);
-        })
-    })
-}
-*/
 window.onload=function(){
     // Load main content
     $(function(){
