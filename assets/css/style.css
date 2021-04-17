@@ -297,3 +297,37 @@ video:focus {
     border: 2px solid gray;
     border-radius: 5px;
 }
+
+.bordered {
+    white-space: normal;
+    border: 1px solid rgb(196, 196, 196);
+    border-radius: 10px;
+    padding: 20px;
+    padding-left: 30px;
+    height: 110px;
+    text-align: left;
+    max-width: 250px;
+    min-width: 200px;
+    display: inline-block;   
+    margin-right: 30px;
+}
+
+.fa-play {
+    margin-right: 10px;
+}
+
+.bordered p {
+    white-space:nowrap;
+    font-size: 14pt;
+    text-transform: none;
+    font-family: "poiret-one", Avenir, Helvetica, Arial, sans-serif !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#recent-title {
+    font-family: "poiret-one", Avenir, Helvetica, Arial, sans-serif !important;
+    font-size: 20pt;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}

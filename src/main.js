@@ -1,19 +1,20 @@
-const { app, BrowserWindow, ipcMain, Notification } = require("electron");
+const { app, BrowserWindow, ipcMain, Notification, nativeImage } = require("electron");
 const path = require('path')
-
+    
 function createWindow () {
+
   const win = new BrowserWindow({
     width: 1100,
     height: 700,
     webPreferences: {
       nodeIntegration: true,
-      webSecurity: false,
       contextIsolation: false,
       enableRemoteModule: true,
       preload: path.join(__dirname, 'preload.js')
     }
   })
-  //win.removeMenu()
+  win.removeMenu()
+  win.setIcon(path.join(__dirname, '../assets/images/maid-chan.png'));
   win.loadFile(path.join(path.dirname(__dirname),'views/index.html'))
 
 }

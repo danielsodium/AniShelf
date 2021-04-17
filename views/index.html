@@ -3,45 +3,45 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Library</title>
+    <title>AniShelf</title>
 
     <link rel="stylesheet" href="../assets/css/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="../assets/css/skeleton.css">
-    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
-    <script src="../scripts/script.js"></script>
+    <script src="../src/script.js"></script>
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
 </head>
 
 <body>
     <div id="left-bar" class="collapsed">
         <div style="margin-top: 20px;">
-            <button class="side-button" onclick="loadHome()">
+            <button class="side-button" onclick="load.loadHome()">
                 <i class="fa fa-home fa-2x"></i>
                 <span>Home</span>
             </button>
         </div>
         <hr />
         <div id="side-bar-list">
-            <button class="side-button" onclick="loadLibrary()">
+            <button class="side-button" onclick="load.loadLibrary()">
                 <i class="fa fa-book fa-2x"></i>
                 <span>Library</span>
             </button>
-            <button class="side-button" onclick="loadSearch()">
+            <button class="side-button" onclick="load.loadSearch()">
                 <i class="fa fa-search fa-2x"></i>
                 <span>Search</span>
             </button>
-            <button class="side-button" onclick="loadQueue()">
+            <button class="side-button" onclick="load.loadQueue()">
                 <i class="fa fa-download fa-2x"></i>
                 <span>Downloading</span>
             </button>
         </div>
         <hr />
         <section class="footer">
-            <button id="settings" style="display:none" onclick="loadSettings()">
+            <button id="settings" style="display:none" onclick="load.loadSettings()">
                 <i id="settings-icon" class="fa fa-cog fa-2x"></i>
             </button>
-            <button id="collapse" onclick="toggleNav()">
+            <button id="collapse" onclick="load.toggleNav()">
                 <i id="collapse-icon" class="fa fa-chevron-right fa-2x"></i>
             </button>
         </section>
@@ -49,16 +49,6 @@
     </div>
     <div id="right-bar">
         <div id="main"></div>
-        
-    </div>
-    <div id="download">
-        <div>
-            <p id="download-title">Downloading</p>
-            <div style="display:flex;justify-content: center;">
-                <p id="download-percent">0%</p>
-                <progress id="progress-bar" value="0" max="100"> 32% </progress>
-            </div>
-        </div>
     </div>
 </body>
 

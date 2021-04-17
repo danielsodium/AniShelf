@@ -8,10 +8,10 @@ window.addEventListener('DOMContentLoaded', () => {
         fs.mkdirSync(path+"/episodes");
         fs.mkdirSync(path+"/images");
         settings = {
-            devMode : true,
+            devMode : false,
             openExternal : false
         }
-        anime = {settings: settings, anime: []}
+        anime = {settings: settings, anime: [], recent : []}
         fs.appendFile(path+"/data.json", JSON.stringify(anime), function (err) {
             if (err) throw err;
             console.log('Saved!');
