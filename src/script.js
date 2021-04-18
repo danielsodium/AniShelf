@@ -2,6 +2,7 @@ const electron = require('electron');
 const fs = require('fs');
 const htmlparser = require('node-html-parser')
 const $ = require('jquery');
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const path = (electron.app || electron.remote.app).getPath('userData')+"/AppStorage"
 

@@ -1,2 +1,5 @@
 node_modules
 out/
+.DS_Store
+assets/.DS_Store
+src/.DS_Store

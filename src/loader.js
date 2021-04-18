@@ -299,8 +299,8 @@ function searchResGoGo(link) {
 async function links(episodeURL, callback) {
     console.log(episodeURL)
     data = await getQualities(episodeURL.url)
-    console.log(data)
-    callback(data.qualities.values().next().value.url)
+    console.log(data.qualities.entries().next().value)
+    callback(data.qualities.entries().next().value)
 }
 
 
@@ -329,10 +329,20 @@ function searchResGrab(link) {
                         downloader.checkDownloadStarted();
                     } else {
                         console.log(info.episodes[i])
-                        links(info.episodes[i], function(res) {
-                            console.log(res)
-                            downloader.addQueue(res, info.title, info.episodes[i].title, "https://cdn.discordapp.com/attachments/506625021138042880/829854968327700490/image0.jpg", "No description :(");
-                            downloader.checkDownloadStarted();
+		
+                        links(info.episodes[i], function(dlink) {
+                            let options  = {
+                            buttons: ["Yes","Cancel"],
+                            message: "Download episode at the quality of "+dlink[0]+"? (unknown usually means 360p)"
+                            }
+                            let response = electron.remote.dialog.showMessageBox(options)
+                            response.then(function(res) {
+                                if (res.response == 0) {
+                                    console.log(res)
+                                    downloader.addQueue(dlink[1].url, info.title, info.episodes[i].title, "https://cdn.discordapp.com/attachments/506625021138042880/829854968327700490/image0.jpg", "No description :(");
+                                    downloader.checkDownloadStarted();
+                                }
+                            })
                         })
                     }
                 }) 
