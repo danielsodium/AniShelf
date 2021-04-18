@@ -13,7 +13,7 @@ function createWindow () {
       preload: path.join(__dirname, 'preload.js')
     }
   })
-  win.removeMenu()
+  //win.removeMenu()
   win.setIcon(path.join(__dirname, '../assets/images/maid-chan.png'));
   win.loadFile(path.join(path.dirname(__dirname),'views/index.html'))
 

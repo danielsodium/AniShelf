@@ -18,6 +18,7 @@
     "electron": "12.0.2"
   },
   "dependencies": {
+    "anigrab": "^1.9.11",
     "array-move": "^3.0.1",
     "electron-squirrel-startup": "^1.0.0",
     "follow-redirects": "^1.13.3",

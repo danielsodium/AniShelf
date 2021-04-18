@@ -1,8 +1,42 @@
 
-module.exports = { getAnimax, getFour, getGoGo, getAnimeout };
+module.exports = { getAnimax, getFour, getGoGo, getAnimeout, getGrab };
 
 const { getData } = require('../src/download.js')
+const { search, getQualities } = require('anigrab').sites.siteLoader(
+    'animefreak'
+);
 
+function getGrab(searchTerm, callback) {
+    var getS = async function(callback) {callback(await search(searchTerm))}
+    getS(function(info) {
+        var returner = [];
+        for (var i = 0; i < info.length; i++) {
+            returner.push({
+                link : info[i].url,
+                title : info[i].title,
+                img : "undefined"
+            })
+        }
+        callback(returner);
+    })
+}
+
+function getAnimax(searchTerm, callback) {
+    getData("https://animax.to/?c=search&q="+searchTerm, function(info) {
+        root = htmlparser.parse(info)
+        var returner = [];
+        var array = root.querySelectorAll('.columns2 .column a img')
+        for (var i = 0; i < array.length; i++) {
+            var title = array[i].parentNode.childNodes[2].text;
+            returner.push({
+                link : array[i].parentNode.attrs.href,
+                title : title.trim(),
+                img : "https://animax.to"+array[i].attributes.src
+            })
+        }
+        callback(returner);
+    })
+}
 
 function getAnimax(searchTerm, callback) {
     getData("https://animax.to/?c=search&q="+searchTerm, function(info) {

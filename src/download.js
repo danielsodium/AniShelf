@@ -2,6 +2,9 @@ const https = require('https');
 const http = require('http')
 const uuid = require('uuid');
 const Stream = require('stream').Transform;
+const { getAnime, getQualities } = require('anigrab').sites.siteLoader(
+    'animefreak'
+);
 
 module.exports = { getQueue, downloadEpisode, downloadGoGo, downloadFour, addQueue, checkDownloadStarted, getData };
 
@@ -41,6 +44,7 @@ function addQueue(link, title, epNum, img, desc) {
 }
 
 function checkDownloadStarted() {
+    console.log(downloadQueue.length)
     if (downloadQueue.length == 1) {
         downloadData = downloadQueue[0]
         downloader.downloadEpisode(downloadData[0], downloadData[1], downloadData[2], downloadData[3], downloadData[4])
@@ -88,13 +92,49 @@ function getFourEp(link, callback) {
     req.end();
 }
 
+function getFourEp(link, callback) {
+    var getDa = require('follow-redirects').https;
+
+    var options = {
+        'method': 'GET',
+        'hostname': '4anime.to',
+        'path': link,
+        'headers': {
+            'Cookie': '__cfduid=d8f30551cdf7b386613e3afb7a42d92a61618620457'
+        },
+        'maxRedirects': 20
+    };
+
+    var req = getDa.request(options, function (res) {
+        var chunks = [];
+
+        res.on("data", function (chunk) {
+            chunks.push(chunk);
+        });
+
+        res.on("end", function (chunk) {
+            var body = Buffer.concat(chunks);
+            callback(body.toString());
+        });
+
+        res.on("error", function (error) {
+            console.error(error);
+        });
+    });
+
+    req.end();
+}
+
+
 function downloadGoGo(link, title, epNum, img, desc) {
+    console.log("HERE")
     getData("https://www1.gogoanime.ai/" + link.slice(9) + "-episode-" + epNum, function (data) {
         root = htmlparser.parse(data)
-        getData("https:" + root.querySelector(".vidcdn a").attrs["data-video"], function (data) {
-            root = htmlparser.parse(data)
-            textChunk = root.querySelector(".wrapper .videocontent script").innerText.trim()
-            var edited = textChunk.substring(textChunk.indexOf("sources:[{file: 'https://storage") + 17, textChunk.indexOf(",label:") - 1)
+        console.log(root.querySelector(".streamtape a").attrs["data-video"])
+        getData(root.querySelector(".streamtape a").attrs["data-video"], function (data) {
+            var a = data.split("document.getElementById('vid'+'eolink').innerHTML =")[1].split("</script>")[0]
+            var edited = ("https:"+a.replace(/['"+; ]+/g, '').trim()).substring(22)
+            console.log(edited)
             downloadQueue.push([edited, title, "Episode " + epNum, img, desc]);
             checkDownloadStarted();
         })
@@ -109,15 +149,10 @@ function downloadEpisode(link, title, epName, image, desc) {
         fs.mkdirSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"));        
     }
     file = fs.createWriteStream(path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4");
-    if (link.indexOf("https") == -1) {
-        http.get(link, function (response) {
-            pipeDownload(response, file, videoID);
-        });
-    } else {
-        https.get(link, function (response) {
-            pipeDownload(response, file, videoID);
-        });
-    }
+    https.get(link, function (response) {
+        pipeDownload(response, file, videoID);
+    });
+
 }
 
 function pipeDownload(inStream, fileStream, videoID) {
@@ -126,12 +161,13 @@ function pipeDownload(inStream, fileStream, videoID) {
     fileStream = fileStream;
     // get total size of the file
     let size = inStream.headers['content-length']
+    console.log(size)
     let written = 0;
     inStream.on('data', data => {
         // do the piping manually here.
         fileStream.write(data, () => {
             written += data.length;
-            var percent = Math.floor((written / size * 100).toFixed(2));
+            var percent = (written / size * 100).toFixed(2);
             if (document.getElementById("progress-bar")) {
                 document.getElementById("progress-bar").value = percent;
                 document.getElementById("download-percent").innerHTML = percent + "%";

@@ -4,7 +4,11 @@ const $ = require('jquery');
 const arrayMove = require('array-move');
 
 const { getData, getQueue } = require('../src/download.js')
-const { getFour } = require('../src/scraper.js')
+const { getFour, getGoGo, getGrab } = require('../src/scraper.js')
+
+const { getAnime, getQualities } = require('anigrab').sites.siteLoader(
+    'animefreak'
+);
 
 const path = (electron.app || electron.remote.app).getPath('userData')+"/AppStorage"
 
@@ -183,7 +187,7 @@ function loadSearch() {
         });
         document.getElementById("search").addEventListener('click', () => {
             $("#results").empty();
-            getFour(document.getElementById("searchTerm").value, function(res) {        
+            getGrab(document.getElementById("searchTerm").value, function(res) {        
                 for (var i = 0; i < res.length; i++) (function(i){ 
                     res = res;
                     var searchdiv = document.createElement("li")
@@ -201,7 +205,7 @@ function loadSearch() {
                     searchdiv.appendChild(name)
                     var linked = document.createElement("a")
                     linked.addEventListener('click', function() {
-                        searchResFour(res[i].link)
+                        searchResGrab(res[i].link)
                     })
                     linked.appendChild(searchdiv)
                     document.getElementById("results").appendChild(linked);
@@ -240,7 +244,7 @@ function searchResFour(link) {
                         downloader.addQueue("https://www.w3schools.com/html/mov_bbb.mp4", title, "Episode "+ episodes[i].text.trim(), cover, descT);
                         downloader.checkDownloadStarted();
                     } else {
-                        downloader.downloadFour(episodes[i].attrs.href, title, "Episode "+ episodes[i].text.trim(), cover, descT.text);
+                        downloader.downloadGoGo(episodes[i].attrs.href, title, "Episode "+ episodes[i].text.trim(), cover, descT.text);
                     }
                 }) 
                 newEp.appendChild(document.createTextNode("Episode "+ (episodes[i].text.trim())));
@@ -262,24 +266,26 @@ function searchResGoGo(link) {
             root = htmlparser.parse(info)
             episodes = root.querySelector("#episode_page li .active").attrs.ep_end
             console.log(episodes)
-            document.getElementById("cover-img").src = root.querySelector(".anime_info_body_bg img").attrs.src
+            image = root.querySelector(".anime_info_body_bg img").attrs.src
+            document.getElementById("cover-img").src = image
             var title = root.querySelector(".anime_info_body_bg h1").text
-            load.replaceText("anime-title", title)
+            replaceText("anime-title", title)
 
             var descT = root.querySelectorAll(".anime_info_body_bg .type")[1]
-            load.replaceText("description",  descT.text)
+            replaceText("description",  descT.text)
 
             // For some reason animax puts latest first so let's swap order
             for (var i = 0; i < parseInt(episodes); i++) (function(i) {
-                listItem = document.createElement("li");
+                listItem = document.createElement("div");
+                newEp = document.createElement("button");
                 listItem.id = "ep_"+(i+1);
-                newEp = document.createElement("a");
+                newEp.style.margin = "10px"
                 newEp.addEventListener('click', function() {
                     if (settings.devMode) {
                         downloader.addQueue("https://www.w3schools.com/html/mov_bbb.mp4", title, i+1, root.querySelector(".anime_info_body_bg img").attrs.src, descT.text);
                         downloader.checkDownloadStarted();
                     } else {
-                        downloader.downloadGoGo(link, title, i+1, root.querySelector(".anime_info_body_bg img").attrs.src, descT.text);
+                        downloader.downloadGoGo(link, title, i+1, image, descT.text);
                     }
                 }) 
                 newEp.appendChild(document.createTextNode("Episode "+ (i+1)));
@@ -290,6 +296,53 @@ function searchResGoGo(link) {
     })
 }
 
+async function links(episodeURL, callback) {
+    console.log(episodeURL)
+    data = await getQualities(episodeURL.url)
+    console.log(data)
+    callback(data.qualities.values().next().value.url)
+}
+
+
+function searchResGrab(link) {
+    // Show info about anime
+    $("#main").empty();
+    link = link;
+
+    var getIt = async function(callback) {callback(await getAnime(link))}
+    $("#main").load("view.html", function() {
+        getIt(function(info) {
+            
+            info = info
+            console.log(info)
+            replaceText("anime-title", info.title)
+            // For some reason animax puts latest first so let's swap order
+            for (var i = 0; i < info.episodes.length; i++) (function(i) {
+                listItem = document.createElement("div");
+                newEp = document.createElement("button");
+                listItem.id = "ep_"+(i+1);
+                newEp.style.margin = "10px"
+                newEp.addEventListener('click', function() {
+                    if (settings.devMode) {
+                        console.log(info.episodes[i])
+                        downloader.addQueue("https://www.w3schools.com/html/mov_bbb.mp4", info.title, info.episodes[i].title, "https://cdn.discordapp.com/attachments/506625021138042880/829854968327700490/image0.jpg", "No description :(");
+                        downloader.checkDownloadStarted();
+                    } else {
+                        console.log(info.episodes[i])
+                        links(info.episodes[i], function(res) {
+                            console.log(res)
+                            downloader.addQueue(res, info.title, info.episodes[i].title, "https://cdn.discordapp.com/attachments/506625021138042880/829854968327700490/image0.jpg", "No description :(");
+                            downloader.checkDownloadStarted();
+                        })
+                    }
+                }) 
+                newEp.appendChild(document.createTextNode(info.episodes[i].title));
+                listItem.appendChild(newEp)
+                document.getElementById("ep-list").appendChild(listItem); 
+            })(i);
+        })
+    })
+}
 
 function toggleNav() {
     if (document.getElementById("left-bar").style.width === "200px") {
