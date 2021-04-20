@@ -1,14 +1,16 @@
 
 module.exports = { getAnimax, getFour, getGoGo, getAnimeout, getGrab };
 
-const { getData } = require('../src/download.js')
+const { getData, getJSON, decryptSource } = require('../src/download.js')
 const { search, getQualities } = require('anigrab').sites.siteLoader(
-    'animefreak'
+    'twist'
 );
 
 function getGrab(searchTerm, callback) {
+    console.log("gettting....")
     var getS = async function(callback) {callback(await search(searchTerm))}
     getS(function(info) {
+        console.log(info)
         var returner = [];
         for (var i = 0; i < info.length; i++) {
             returner.push({

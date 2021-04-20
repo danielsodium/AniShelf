@@ -5,9 +5,10 @@ const arrayMove = require('array-move');
 
 const { getData, getQueue } = require('../src/download.js')
 const { getFour, getGoGo, getGrab } = require('../src/scraper.js')
+const twist = require('../src/twist.js')
 
 const { getAnime, getQualities } = require('anigrab').sites.siteLoader(
-    'animefreak'
+    'twist'
 );
 
 const path = (electron.app || electron.remote.app).getPath('userData')+"/AppStorage"
@@ -79,8 +80,8 @@ function loadHome() {
                     icon.classList.add("fa")
                     icon.classList.add("fa-play")
                     
-                    eTitle.appendChild(icon)
-                    eTitle.appendChild(document.createTextNode(data.recent[i].name))
+                    eTitle.appendChild(icon);
+                    eTitle.appendChild(document.createTextNode(data.recent[i].name));
                     button.appendChild(eTitle);
                     button.appendChild(aTitle);
                     button.addEventListener('click', function() {
@@ -187,28 +188,23 @@ function loadSearch() {
         });
         document.getElementById("search").addEventListener('click', () => {
             $("#results").empty();
-            getGrab(document.getElementById("searchTerm").value, function(res) {        
+            twist.getTwist(document.getElementById("searchTerm").value, function(res) {        
                 for (var i = 0; i < res.length; i++) (function(i){ 
+                    console.log(res[i])
                     res = res;
-                    var searchdiv = document.createElement("li")
-                    var img = document.createElement("img");                 // Create a <li> node
-                    var textnode = document.createTextNode(res[i].title);         // Create a text node
-                    img.src = res[i].img
-                    var title = document.createElement("a");  
-                    title.className = "poster";
-                    title.appendChild(img)
-                    var name = document.createElement("a");  
-                    name.className = "name";
-                    name.appendChild(textnode)
+                    var text = document.createElement("p")
+                    var name = document.createElement("button");  
+                    text.appendChild(document.createTextNode(res[i].title));
+
+                    name.classList.add("bordered-wrap");
+                    name.appendChild(text)
     
-                    searchdiv.appendChild(title)
-                    searchdiv.appendChild(name)
-                    var linked = document.createElement("a")
-                    linked.addEventListener('click', function() {
-                        searchResGrab(res[i].link)
+                    //searchdiv.appendChild(title)
+                    name.addEventListener('click', function() {
+                        searchResTwist(res[i].info)
                     })
-                    linked.appendChild(searchdiv)
-                    document.getElementById("results").appendChild(linked);
+                    
+                    document.getElementById("results").appendChild(name);
                 })(i);
     
             })
@@ -254,6 +250,70 @@ function searchResFour(link) {
         })
     })
 }
+
+function searchResTwist(info) {
+    // Show info about anime
+    $("#main").empty();
+    info = info;
+    console.log(info)
+    slug = info.slug.slug
+    $("#main").load("view.html", function() {
+        replaceText("anime-title", info.alt_title)
+        twist.getJSON("/api/anime/"+slug+"/sources", function(episodes) {
+            episodes = episodes
+            if (info.mal_id == null) {
+                    document.getElementById("cover-img").src = "https://ih1.redbubble.net/image.399938005.6245/fposter,small,wall_texture,product,750x1000.u5.jpg"
+                    replaceText("description",  "No Description provided.");
+                    for (var i = 0; i < episodes.length; i++) (function(i) {
+                        listItem = document.createElement("div");
+                        newEp = document.createElement("button");
+                        listItem.id = "ep_"+(episodes[i].number);
+                        newEp.style.margin = "10px"
+                        newEp.addEventListener('click', function() {
+                            if (settings.devMode) {
+                                console.log(twist.decryptSource(episodes[i].source))
+                                downloader.addQueue("https://www.w3schools.com/html/mov_bbb.mp4", info.alt_title, "Episode "+ episodes[i].number, "https://ih1.redbubble.net/image.399938005.6245/fposter,small,wall_texture,product,750x1000.u5.jpg", "No Description provided.");
+                                downloader.checkDownloadStarted();
+                            } else {
+                                downloader.addQueue(encodeURI(twist.decryptSource(episodes[i].source)), info.alt_title, "Episode "+ episodes[i].number, "https://ih1.redbubble.net/image.399938005.6245/fposter,small,wall_texture,product,750x1000.u5.jpg", "No Description provided.");
+                                downloader.checkDownloadStarted();
+                            }
+                        }) 
+                        newEp.appendChild(document.createTextNode("Episode "+ episodes[i].number));
+                        listItem.appendChild(newEp)
+                        document.getElementById("ep-list").appendChild(listItem); 
+                    })(i);
+            } else {
+                twist.getMal(info.mal_id, function(malInfo) {
+                    replaceText("description",  malInfo.desc)
+                    document.getElementById("cover-img").src = malInfo.img
+                    // For some reason animax puts latest first so let's swap order
+                    for (var i = 0; i < episodes.length; i++) (function(i) {
+                        listItem = document.createElement("div");
+                        newEp = document.createElement("button");
+                        listItem.id = "ep_"+(i+1);
+                        newEp.style.margin = "10px"
+                        newEp.addEventListener('click', function() {
+                            if (settings.devMode) {
+                                console.log(twist.decryptSource(episodes[i].source))
+                                downloader.addQueue("https://www.w3schools.com/html/mov_bbb.mp4", info.alt_title, "Episode "+ episodes[i].number, malInfo.img, malInfo.desc);
+                                downloader.checkDownloadStarted();
+                            } else {
+                                downloader.addQueue(encodeURI(twist.decryptSource(episodes[i].source)), info.alt_title,"Episode "+  episodes[i].number, malInfo.img, malInfo.desc);
+                                downloader.checkDownloadStarted();
+                            }
+                        }) 
+                        newEp.appendChild(document.createTextNode("Episode "+ episodes[i].number));
+                        listItem.appendChild(newEp)
+                        document.getElementById("ep-list").appendChild(listItem); 
+                    })(i);
+                })
+            }
+            
+        })
+    })
+}
+
 
 function searchResGoGo(link) {
     // Show info about anime

@@ -5,6 +5,7 @@ const $ = require('jquery');
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const path = (electron.app || electron.remote.app).getPath('userData')+"/AppStorage"
+const twist = require('../src/twist.js')
 
 const downloader = require('../src/download.js')
 const load = require('../src/loader.js')

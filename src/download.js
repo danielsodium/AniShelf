@@ -3,12 +3,14 @@ const http = require('http')
 const uuid = require('uuid');
 const Stream = require('stream').Transform;
 const { getAnime, getQualities } = require('anigrab').sites.siteLoader(
-    'animefreak'
+    'twist'
 );
+
 
 module.exports = { getQueue, downloadEpisode, downloadGoGo, downloadFour, addQueue, checkDownloadStarted, getData };
 
 downloadQueue = [];
+
 
 function getQueue() {
     return downloadQueue;
@@ -148,10 +150,27 @@ function downloadEpisode(link, title, epName, image, desc) {
     if (!fs.existsSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"))) {
         fs.mkdirSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"));        
     }
+
+    var options = {
+        'method': 'GET',
+        'hostname': 'cdn.twist.moe',
+        'path': link,
+        'headers': {
+            'Accept-Encoding': 'identity;q=1, *;q=0',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0',
+            'Range': 'bytes=0-',
+            'Referer': 'https://twist.moe/',
+        },
+        'maxRedirects': 100
+    };
+      
+    var getVid = require('follow-redirects').https;
+
     file = fs.createWriteStream(path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4");
-    https.get(link, function (response) {
+    var req = getVid.request(options, function (response) {
         pipeDownload(response, file, videoID);
     });
+    req.end();
 
 }
 

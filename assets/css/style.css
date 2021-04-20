@@ -38,6 +38,10 @@ body {
     margin: 0px;
 }
 
+#cover-img {
+    max-width: 300px;
+}
+
 #download {
     display: none;
     margin-left: 70px;
@@ -330,4 +334,36 @@ video:focus {
     font-size: 20pt;
     margin-top: 30px;
     margin-bottom: 10px;
+}
+
+.centered {
+    display: flex;
+    padding-top:20%;
+    width: 100%;
+}
+.loader {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.bordered-wrap p{
+    white-space: normal;
+    font-size: 14pt;
+    text-transform: none;
+    font-family: "poiret-one", Avenir, Helvetica, Arial, sans-serif !important;
+    word-wrap: break-word;
+}
+
+.bordered-wrap {
+    white-space: normal;
+    border: 1px solid rgb(196, 196, 196);
+    border-radius: 10px;
+    padding: 20px;
+    padding-left: 30px;
+    height: 110px;
+    text-align: left;
+    max-width: 250px;
+    min-width: 200px;
+    display: inline-block;   
+    margin-right: 30px;
 }

@@ -1,11 +1,15 @@
 const { app, BrowserWindow, ipcMain, Notification, nativeImage } = require("electron");
 const path = require('path')
-    
+const EventEmitter = require('events')
+const { getAll } = require("./twist.js")
+
+const loadingEvents = new EventEmitter()
 function createWindow () {
 
   const win = new BrowserWindow({
     width: 1100,
     height: 700,
+    icon : "../icon.ico",
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -13,20 +17,27 @@ function createWindow () {
       preload: path.join(__dirname, 'preload.js')
     }
   })
-  //win.removeMenu()
-  win.setIcon(path.join(__dirname, '../assets/images/maid-chan.png'));
-  win.loadFile(path.join(path.dirname(__dirname),'views/index.html'))
-
+  win.removeMenu();  
+  return win
+  
 }
 
 app.whenReady().then(() => {
-  createWindow()
 
+  const window = createWindow()
+  window.loadFile(path.join(path.dirname(__dirname),'views/splash.html'));
+  loadingEvents.on('finished', () => {
+    window.loadFile(path.join(path.dirname(__dirname),'views/index.html'));
+ }) 
+ setTimeout(() => loadingEvents.emit('finished'), 3000)
+ downloadData();
+ /*
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
     }
   })
+  */
 })
 
 app.on('window-all-closed', () => {
@@ -36,10 +47,21 @@ app.on('window-all-closed', () => {
 })
 
 
+function downloadData() {
+  getAll(function(info) {
+      global.allAnime = info;
+      loadingEvents.emit('finished')
+  });
+}
+
 ipcMain.handle('show-notification', (event, ...args) => {
   const notification = {
       title: (args[1] ? "Download finished" : "Download started"),
       body: `Downloaded ${args[0]}`
   }
   new Notification(notification).show()
+});
+
+ipcMain.on( "setAllAnime", ( event, allAnime ) => {
+  global.allAnime = allAnime;
 });
