@@ -22,14 +22,14 @@ function loadQueue () {
     })
 }
 
+
 function loadSettings() {
     $("#main").empty();
     $("#main").load("settings.html", function() {
         document.getElementById("toggleDev").checked = settings.devMode;
         document.getElementById("toggleExternal").checked = settings.openExternal;
-        if (remote.getGlobal( "allAnime" ).length == 0) {
-            console.log("OFFLINE")
-        }
+        document.getElementById("mode").appendChild(document.createTextNode(remote.getGlobal( "allAnime" ).length == 0 ? "offline" : "online"))
+
     })
 }
 

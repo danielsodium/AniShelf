@@ -345,6 +345,7 @@ video:focus {
 .loader {
     margin-left: auto;
     margin-right: auto;
+    text-align: center;
 }
 
 .bordered-wrap p{
