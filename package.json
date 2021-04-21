@@ -2,60 +2,23 @@
   "name": "AniShelf",
   "version": "0.1.0",
   "author": "Daniel Na",
-  "description": "Anime library manager",
+  "description": "Anime downloader and library manager",
   "main": "./src/main.js",
   "scripts": {
-    "start": "electron .",
-    "package": "electron-forge package",
-    "make": "electron-forge make"
+    "start": "electron ."
   },
   "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.54",
-    "@electron-forge/maker-deb": "^6.0.0-beta.54",
-    "@electron-forge/maker-rpm": "^6.0.0-beta.54",
-    "@electron-forge/maker-squirrel": "^6.0.0-beta.54",
-    "@electron-forge/maker-zip": "^6.0.0-beta.54",
-    "electron": "12.0.2"
+    "electron": "12.0.2",
+    "video.js": "^7.11.8"
   },
   "dependencies": {
     "anigrab": "^1.9.11",
     "array-move": "^3.0.1",
     "crypto-js": "^4.0.0",
-    "custom-electron-titlebar": "^3.2.6",
     "electron-squirrel-startup": "^1.0.0",
     "follow-redirects": "^1.13.3",
     "jquery": "^3.6.0",
-    "jsdom": "^16.5.3",
     "node-html-parser": "^3.1.4",
     "uuid": "^8.3.2"
-  },
-  "config": {
-    "forge": {
-      "packagerConfig": {
-        "icon": "../assets/images/maid-chan.ico"
-      },
-      "makers": [
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "my_electron_app"
-          }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin"
-          ]
-        },
-        {
-          "name": "@electron-forge/maker-deb",
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
-        }
-      ]
-    }
   }
 }

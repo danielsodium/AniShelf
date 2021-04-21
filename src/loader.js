@@ -3,6 +3,7 @@ const $ = require('jquery');
 
 const arrayMove = require('array-move');
 
+const videojs = require('video.js')
 const { getData, getQueue } = require('../src/download.js')
 const { getFour, getGoGo, getGrab } = require('../src/scraper.js')
 const twist = require('../src/twist.js')
@@ -86,7 +87,7 @@ function loadPlay(file, title, name) {
                 $("#main").empty();
                 $("#main").load("play.html", function() {
                     document.getElementById("vid-src").src = file;
-                    document.getElementById("vid").play();
+                    //document.getElementById("vid").play();
                     document.getElementById("all").addEventListener('click', function() {
                         viewOffline(title);
                     })
@@ -97,6 +98,7 @@ function loadPlay(file, title, name) {
                     document.getElementById("prev").addEventListener('click', function() {
                         nextEP(title, parseInt(name.substring(8))-1)
                     })
+
                 })
             }
         })

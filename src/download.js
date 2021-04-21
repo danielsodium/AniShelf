@@ -220,8 +220,11 @@ function downloadEpisode(link, title, epName, image, desc) {
 
 
 }
-function getE(link, videoID, start) {
-    console.log(start);
+function continueDownload(link, title,videoID, path) {
+    fs.stat(path, (err, stat) => {
+        if(err) return getEP(link, title, videoID, 0)
+        return getEP(link, title, videoID, stat.size)
+    })
 }
 
 function getEP(link, title, videoID, start) {
@@ -244,11 +247,19 @@ function getEP(link, title, videoID, start) {
         var req = getVid.request(options, function (response) {
             pipeDownload(response, file, videoID);
         });
+        req.on('error', function(e) {
+            console.log("Connection reset, retrying")
+            continueDownload(link, title, videoID, path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4")
+        });
         req.end();
     } else {
         file = fs.createWriteStream(path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4", {flags:'a'});
         var req = getVid.request(options, function (response) {
             pipeDownload(response, file, videoID);
+        });
+        req.on('error', function(e) {
+            console.log("Connection reset, retrying")
+            continueDownload(link, title, videoID, path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4")
         });
         req.end();
     }
