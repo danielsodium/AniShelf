@@ -33,6 +33,36 @@ function loadSettings() {
     })
 }
 
+skipOP = () => {
+    var vid = document.getElementById("vid");
+    vid.currentTime = vid.currentTime + 88;
+}
+
+
+nextEP = (title, num) => {
+    fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
+        data = JSON.parse(data)
+        var animeInd = data.anime.findIndex(element => element.title == title)
+        var findEp = data.anime[animeInd].episodes.find(element => parseInt(element.name.substring(8)) === num)
+        console.log(num)
+        if (findEp != undefined) {
+            loadPlay(path+"/episodes/"+title.replace(/[\W_]+/g,"-")+"/"+findEp.id+".mp4", title, findEp.name);
+        }
+    })
+}
+
+prevEP = (title, num) => {
+    fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
+        data = JSON.parse(data)
+        var animeInd = data.anime.findIndex(element => element.title == title)
+        var findEp = data.anime[animeInd].episodes.find(element => parseInt(element.name.substring(8)) === num)
+        console.log(num)
+        if (findEp != undefined) {
+            loadPlay(path+"/episodes/"+title.replace(/[\W_]+/g,"-")+"/"+findEp.id+".mp4", title, findEp.name);
+        }
+    })
+}
+
 function loadPlay(file, title, name) {
     fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
         data = JSON.parse(data)
@@ -57,6 +87,16 @@ function loadPlay(file, title, name) {
                 $("#main").load("play.html", function() {
                     document.getElementById("vid-src").src = file;
                     document.getElementById("vid").play();
+                    document.getElementById("all").addEventListener('click', function() {
+                        viewOffline(title);
+                    })
+                    document.getElementById("title").appendChild(document.createTextNode(title + " " + name))
+                    document.getElementById("next").addEventListener('click', function() {
+                        nextEP(title, parseInt(name.substring(8))+1)
+                    })
+                    document.getElementById("prev").addEventListener('click', function() {
+                        nextEP(title, parseInt(name.substring(8))-1)
+                    })
                 })
             }
         })
