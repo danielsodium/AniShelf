@@ -1,5 +1,6 @@
 @import url("https://use.typekit.net/eyp4egm.css");
 @import url("../fonts/open-iconic.min.css");
+
 @font-face {
     font-family: "nunitolight";
     src: url("../fonts/nunito-light-webfont.woff2") format("woff2"), url("./assets/fonts/nunito-light-webfont.woff") format("woff");
@@ -12,7 +13,7 @@ a:hover {
 }
 
 * {
-    font-family: "nunitolight"; //background-color: #f5f5dc;
+    font-family: "nunitolight";
 }
 
 p {
@@ -262,7 +263,7 @@ button {
 
 .footer {
     position: absolute;
-    bottom: 10px;
+    bottom: 30px;
     left: 0;
     right: 0;
     padding: 0.5rem 1rem;
@@ -367,3 +368,35 @@ video:focus {
     display: inline-block;   
     margin-right: 30px;
 }
+
+
+#titlebar {
+    display: block;
+    position: fixed;
+    top: 0px;
+    height: 32px;
+    width: 100%; /*Compensate for body 1px border*/
+    background: transparent;
+  }
+  #titlebar #drag-region {
+    width: calc(100% - 60px);
+    height: 100%;
+    -webkit-app-region: drag;
+  }
+
+  .closeApp {
+      position:fixed;
+      right:0px;
+      text-align:center;
+      top:0px;
+      border-radius: 0px;
+      height:32px;
+      width:40px;
+      border: 0px;
+      z-index: -1;
+  }
+
+  .closeApp i {
+      margin-top: 5px;
+      margin-left: -7px;
+  }

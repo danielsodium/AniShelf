@@ -21,6 +21,7 @@
     "anigrab": "^1.9.11",
     "array-move": "^3.0.1",
     "crypto-js": "^4.0.0",
+    "custom-electron-titlebar": "^3.2.6",
     "electron-squirrel-startup": "^1.0.0",
     "follow-redirects": "^1.13.3",
     "jquery": "^3.6.0",

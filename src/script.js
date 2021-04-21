@@ -2,6 +2,8 @@ const electron = require('electron');
 const fs = require('fs');
 const htmlparser = require('node-html-parser')
 const $ = require('jquery');
+const remote = electron.remote;
+
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const path = (electron.app || electron.remote.app).getPath('userData')+"/AppStorage"
@@ -9,6 +11,8 @@ const twist = require('../src/twist.js')
 
 const downloader = require('../src/download.js')
 const load = require('../src/loader.js')
+
+
 
 settings = {};
 
@@ -18,6 +22,10 @@ loadSettingsFile = function() {
         settings = data.settings;
     })
 }
+
+toggleCSS = function() {
+    document.documentElement.className = "theme-beige";
+ }
 
 saveSettingsFile = function() {
     fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
@@ -30,7 +38,13 @@ saveSettingsFile = function() {
     })
 }
 
+closeApp = () => {
+    let w = remote.getCurrentWindow()
+    w.close()
+}
+
 toggleSetting = function(setting) {
+    console.log("CLICK")
     settings[setting] = !settings[setting];
     saveSettingsFile();
 }

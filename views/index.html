@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>AniShelf</title>
+    <title></title>
 
     <link rel="stylesheet" href="../assets/css/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="../assets/css/skeleton.css">
@@ -15,7 +15,13 @@
 </head>
 
 <body>
-    <div id="left-bar" class="collapsed">
+    <header id="titlebar">
+        
+        <div id="drag-region">
+        </div>
+        <button class="closeApp" onclick="closeApp()"><i class="fa fa-close fa-2x"></i></button>
+      </header>
+    <div id="left-bar" class="collapsed" style="padding-top:30px">
         <div style="margin-top: 20px;">
             <button class="side-button" onclick="load.loadHome()">
                 <i class="fa fa-home fa-2x"></i>
@@ -48,7 +54,7 @@
         </section>
 
     </div>
-    <div id="right-bar">
+    <div id="right-bar" style="padding-top:50px">
         <div id="main"></div>
     </div>
 </body>

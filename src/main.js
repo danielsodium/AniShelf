@@ -9,6 +9,7 @@ function createWindow () {
   const win = new BrowserWindow({
     width: 1100,
     height: 700,
+    frame: false,
     icon : "../icon.ico",
     webPreferences: {
       nodeIntegration: true,
@@ -17,8 +18,7 @@ function createWindow () {
       preload: path.join(__dirname, 'preload.js')
     }
   })
-  win.removeMenu();  
-  return win
+  return win;
   
 }
 
@@ -31,7 +31,7 @@ app.whenReady().then(() => {
  }) 
  setTimeout(() => loadingEvents.emit('finished'), 3000)
  downloadData();
- /*
+  /*
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()

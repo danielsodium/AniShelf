@@ -7,7 +7,7 @@ const { getAnime, getQualities } = require('anigrab').sites.siteLoader(
 );
 
 
-module.exports = { getQueue, downloadEpisode, downloadGoGo, downloadFour, addQueue, checkDownloadStarted, getData };
+module.exports = { checkIfDownloaded, getQueue, downloadEpisode, downloadGoGo, downloadFour, addQueue, checkDownloadStarted, getData };
 
 downloadQueue = [];
 
@@ -144,13 +144,87 @@ function downloadGoGo(link, title, epNum, img, desc) {
 
 }
 
+function checkIfDownloaded(title, epName, callback) {
+    fs.readFile(path + "/data.json", 'utf8', (err, data) => {
+        var animeList = JSON.parse(data);
+        entry = animeList.anime.findIndex(element => element.title == title)
+        if (entry != -1) {
+            completed = animeList.anime[entry].episodes.find(element => element.name == epName)
+            if (completed != undefined) {
+                if (completed.complete == true) {
+                    return callback(true)
+                } else {
+                    return callback(false)
+                }
+            } else return callback(false)
+        } else {
+            return callback(false)
+        }
+    })
+}
+
 function downloadEpisode(link, title, epName, image, desc) {
     electron.ipcRenderer.invoke('show-notification', epName, false);
     videoID = uuid.v4()
     if (!fs.existsSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"))) {
         fs.mkdirSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"));        
     }
+    fs.readFile(path + "/data.json", 'utf8', (err, data) => {
+        if (err) {
+            console.error(err)
+            return
+        }
+        var animeList = JSON.parse(data);
+        entry = animeList.anime.findIndex(element => element.title == title)
+        if (entry == -1) {
+            animeList.anime.push({
+                title: title,
+                image: path + "/images/" + title.replace(/[\W_]+/g, "-") + ".png",
+                desc: desc,
+                episodes: [{
+                    name: epName,
+                    id: videoID,
+                    complete: false
+                }]
+            })
+        } else {
+            var completed = animeList.anime[entry].episodes.find(element => element.name == epName)
+            if (completed != undefined) {
+                if (completed.complete) return downloadQueue.shift();
+                else {
+                    return fs.stat(path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + completed.id + ".mp4", (err, stat) => {
+                        if(err) return getEP(link, title, videoID, 0)
+                        // DOWNLOAD WITH STAT SIZE
+                        return getEP(link, title, completed.id, stat.size)
+                    })
+                }
+                
+            } else {
+                animeList.anime[entry].episodes.push({
+                    name: epName,
+                    id: videoID,
+                    complete: false
+                })
+                console.log("HERE")
+            }
+            
+        }
+        fs.writeFile(path + "/data.json", JSON.stringify(animeList), err => {
+            if (err) {
+                console.error(err)
+                return;
+            }
+            return getEP(link, title, videoID, 0);
+        })
+    })
 
+
+}
+function getE(link, videoID, start) {
+    console.log(start);
+}
+
+function getEP(link, title, videoID, start) {
     var options = {
         'method': 'GET',
         'hostname': 'cdn.twist.moe',
@@ -158,20 +232,27 @@ function downloadEpisode(link, title, epName, image, desc) {
         'headers': {
             'Accept-Encoding': 'identity;q=1, *;q=0',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0',
-            'Range': 'bytes=0-',
+            'Range': `bytes=${start}-`,
             'Referer': 'https://twist.moe/',
+            'Keep-Alive': 'timeout=60000'
         },
         'maxRedirects': 100
     };
-      
     var getVid = require('follow-redirects').https;
-
-    file = fs.createWriteStream(path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4");
-    var req = getVid.request(options, function (response) {
-        pipeDownload(response, file, videoID);
-    });
-    req.end();
-
+    if (start == 0) {
+        file = fs.createWriteStream(path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4");
+        var req = getVid.request(options, function (response) {
+            pipeDownload(response, file, videoID);
+        });
+        req.end();
+    } else {
+        file = fs.createWriteStream(path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4", {flags:'a'});
+        var req = getVid.request(options, function (response) {
+            pipeDownload(response, file, videoID);
+        });
+        req.end();
+    }
+    
 }
 
 function pipeDownload(inStream, fileStream, videoID) {
@@ -225,25 +306,8 @@ downloadFinished = function (videoID) {
         }
         var animeList = JSON.parse(data);
         entry = animeList.anime.findIndex(element => element.title == title)
-        if (entry == -1) {
-            animeList.anime.push({
-                title: title,
-                image: path + "/images/" + title.replace(/[\W_]+/g, "-") + ".png",
-                desc: desc,
-                episodes: [{
-                    name: epName,
-                    id: videoID
-                }]
-            })
-        } else {
-            if (animeList.anime[entry].episodes.findIndex(element => element.name == epName) != -1) {
-                return;
-            }
-            animeList.anime[entry].episodes.push({
-                name: epName,
-                id: videoID
-            })
-        }
+        ep = animeList.anime[entry].episodes.findIndex(element => element.name == epName)
+        animeList.anime[entry].episodes[ep].complete = true;
         fs.writeFile(path + "/data.json", JSON.stringify(animeList), err => {
             if (err) {
                 console.error(err)

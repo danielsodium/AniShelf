@@ -17,7 +17,6 @@ const
 
 function getAll(callback) {
     getJSON("/api/anime", function(info) {
-        console.log("done")
         callback(info);
     });
 }
@@ -45,7 +44,8 @@ function getJSON(endpoint, callback) {
         'path': endpoint,
         'headers': {
             'x-access-token': accessToken,
-            'user-agent': userAgent
+            'user-agent': userAgent,
+            'Keep-Alive': 'timeout=60000'
         },
         'maxRedirects': 20
       };
@@ -60,10 +60,14 @@ function getJSON(endpoint, callback) {
           callback(JSON.parse(body.toString()));
         });
         res.on("error", function (error) {
-          console.error(error);
+          callback([]);
         });
       })
       req.end();
+      req.on('error', function(e) {
+        callback([]);
+      });
+      
 }
 
 function findMatches(wordToMatch, lang) {

@@ -27,6 +27,9 @@ function loadSettings() {
     $("#main").load("settings.html", function() {
         document.getElementById("toggleDev").checked = settings.devMode;
         document.getElementById("toggleExternal").checked = settings.openExternal;
+        if (remote.getGlobal( "allAnime" ).length == 0) {
+            console.log("OFFLINE")
+        }
     })
 }
 
@@ -275,8 +278,13 @@ function searchResTwist(info) {
                                 downloader.addQueue("https://www.w3schools.com/html/mov_bbb.mp4", info.alt_title, "Episode "+ episodes[i].number, "https://ih1.redbubble.net/image.399938005.6245/fposter,small,wall_texture,product,750x1000.u5.jpg", "No Description provided.");
                                 downloader.checkDownloadStarted();
                             } else {
-                                downloader.addQueue(encodeURI(twist.decryptSource(episodes[i].source)), info.alt_title, "Episode "+ episodes[i].number, "https://ih1.redbubble.net/image.399938005.6245/fposter,small,wall_texture,product,750x1000.u5.jpg", "No Description provided.");
-                                downloader.checkDownloadStarted();
+                                downloader.checkIfDownloaded(info.alt_title, "Episode "+ episodes[i].number, function(exists) {
+                                    if (!exists) {
+                                        downloader.addQueue(encodeURI(twist.decryptSource(episodes[i].source)), info.alt_title, "Episode "+ episodes[i].number, "https://ih1.redbubble.net/image.399938005.6245/fposter,small,wall_texture,product,750x1000.u5.jpg", "No Description provided.");
+                                        downloader.checkDownloadStarted();
+                                    }      
+                                })
+                                
                             }
                         }) 
                         newEp.appendChild(document.createTextNode("Episode "+ episodes[i].number));
@@ -299,8 +307,12 @@ function searchResTwist(info) {
                                 downloader.addQueue("https://www.w3schools.com/html/mov_bbb.mp4", info.alt_title, "Episode "+ episodes[i].number, malInfo.img, malInfo.desc);
                                 downloader.checkDownloadStarted();
                             } else {
-                                downloader.addQueue(encodeURI(twist.decryptSource(episodes[i].source)), info.alt_title,"Episode "+  episodes[i].number, malInfo.img, malInfo.desc);
-                                downloader.checkDownloadStarted();
+                                downloader.checkIfDownloaded(info.alt_title, "Episode "+ episodes[i].number, function(exists) {
+                                    if (!exists) {
+                                        downloader.addQueue(encodeURI(twist.decryptSource(episodes[i].source)), info.alt_title,"Episode "+  episodes[i].number, malInfo.img, malInfo.desc);
+                                        downloader.checkDownloadStarted();
+                                    }
+                                })
                             }
                         }) 
                         newEp.appendChild(document.createTextNode("Episode "+ episodes[i].number));
