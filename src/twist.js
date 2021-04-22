@@ -45,7 +45,6 @@ function getJSON(endpoint, callback) {
         'headers': {
             'x-access-token': accessToken,
             'user-agent': userAgent,
-            'Keep-Alive': 'timeout=60000'
         },
         'maxRedirects': 20
       };
@@ -54,7 +53,7 @@ function getJSON(endpoint, callback) {
         res.on("data", function (chunk) {
           chunks.push(chunk);
         });
-      
+
         res.on("end", function (chunk) {
           var body = Buffer.concat(chunks);
           callback(JSON.parse(body.toString()));
@@ -67,7 +66,7 @@ function getJSON(endpoint, callback) {
       req.on('error', function(e) {
         callback([]);
       });
-      
+
 }
 
 function findMatches(wordToMatch, lang) {

@@ -247,6 +247,7 @@ function getEP(link, title, videoID, start) {
         var req = getVid.request(options, function (response) {
             pipeDownload(response, file, videoID);
         });
+        if(req.statusCode.toString()[0] != '2') return console.log(`Server responded with ${req.status} (${req.statusText})`)
         req.on('error', function(e) {
             console.log("Connection reset, retrying")
             continueDownload(link, title, videoID, path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4")
