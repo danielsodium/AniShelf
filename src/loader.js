@@ -3,10 +3,11 @@ const $ = require('jquery');
 
 const arrayMove = require('array-move');
 
-const videojs = require('video.js')
 const { getData, getQueue } = require('../src/download.js')
 const { getFour, getGoGo, getGrab } = require('../src/scraper.js')
 const twist = require('../src/twist.js')
+
+const downloader = require('../src/download.js')
 
 const { getAnime, getQualities } = require('anigrab').sites.siteLoader(
     'twist'
@@ -118,13 +119,13 @@ function loadHome() {
                     var button = document.createElement("button")
                     button.classList.add("bordered");
                     var eTitle = document.createElement("p")
-                    
+
                     var icon = document.createElement("i")
                     var aTitle = document.createElement("p")
                     aTitle.appendChild(document.createTextNode(data.recent[i].title))
                     icon.classList.add("fa")
                     icon.classList.add("fa-play")
-                    
+
                     eTitle.appendChild(icon);
                     eTitle.appendChild(document.createTextNode(data.recent[i].name));
                     button.appendChild(eTitle);
@@ -149,14 +150,14 @@ function viewOffline(title) {
     // Show info about downloaded anime
     $("#main").empty();
     title = title;
-    
+
     $("#main").load("view.html", function() {
         fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
             data = JSON.parse(data)
             entryIndex = data.anime.findIndex(element => element.title == title)
             entry = data.anime[entryIndex]
             episodes = entry.episodes
-            
+
             document.getElementById("cover-img").src = entry.image
             replaceText("anime-title", title)
             replaceText("description", entry.desc)
@@ -194,15 +195,15 @@ function loadLibrary() {
     $("#main").load("library.html", function() {
         fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
             entries = JSON.parse(data).anime
-            for (var i = 0; i < entries.length; i++) (function(i){ 
+            for (var i = 0; i < entries.length; i++) (function(i){
                 var searchdiv = document.createElement("li")
                 var img = document.createElement("img");                 // Create a <li> node
                 var textnode = document.createTextNode(entries[i].title);         // Create a text node
                 img.src = entries[i].image
-                var title = document.createElement("a");  
+                var title = document.createElement("a");
                 title.className = "poster";
                 title.appendChild(img)
-                var name = document.createElement("a");  
+                var name = document.createElement("a");
                 name.className = "name";
                 name.appendChild(textnode)
 
@@ -233,25 +234,25 @@ function loadSearch() {
         });
         document.getElementById("search").addEventListener('click', () => {
             $("#results").empty();
-            twist.getTwist(document.getElementById("searchTerm").value, function(res) {        
-                for (var i = 0; i < res.length; i++) (function(i){ 
+            twist.getTwist(document.getElementById("searchTerm").value, function(res) {
+                for (var i = 0; i < res.length; i++) (function(i){
                     console.log(res[i])
                     res = res;
                     var text = document.createElement("p")
-                    var name = document.createElement("button");  
+                    var name = document.createElement("button");
                     text.appendChild(document.createTextNode(res[i].title));
 
                     name.classList.add("bordered-wrap");
                     name.appendChild(text)
-    
+
                     //searchdiv.appendChild(title)
                     name.addEventListener('click', function() {
                         searchResTwist(res[i].info)
                     })
-                    
+
                     document.getElementById("results").appendChild(name);
                 })(i);
-    
+
             })
         });
     })
@@ -261,7 +262,7 @@ function searchResFour(link) {
     // Show info about anime
     $("#main").empty();
     link = link;
-    
+
     $("#main").load("view.html", function() {
         getData(link, function(data) {
             root = htmlparser.parse(data);
@@ -287,10 +288,10 @@ function searchResFour(link) {
                     } else {
                         downloader.downloadGoGo(episodes[i].attrs.href, title, "Episode "+ episodes[i].text.trim(), cover, descT.text);
                     }
-                }) 
+                })
                 newEp.appendChild(document.createTextNode("Episode "+ (episodes[i].text.trim())));
                 listItem.appendChild(newEp)
-                document.getElementById("ep-list").appendChild(listItem); 
+                document.getElementById("ep-list").appendChild(listItem);
             })(i)
         })
     })
@@ -324,14 +325,14 @@ function searchResTwist(info) {
                                     if (!exists) {
                                         downloader.addQueue(encodeURI(twist.decryptSource(episodes[i].source)), info.alt_title, "Episode "+ episodes[i].number, "https://ih1.redbubble.net/image.399938005.6245/fposter,small,wall_texture,product,750x1000.u5.jpg", "No Description provided.");
                                         downloader.checkDownloadStarted();
-                                    }      
+                                    }
                                 })
-                                
+
                             }
-                        }) 
+                        })
                         newEp.appendChild(document.createTextNode("Episode "+ episodes[i].number));
                         listItem.appendChild(newEp)
-                        document.getElementById("ep-list").appendChild(listItem); 
+                        document.getElementById("ep-list").appendChild(listItem);
                     })(i);
             } else {
                 twist.getMal(info.mal_id, function(malInfo) {
@@ -356,14 +357,14 @@ function searchResTwist(info) {
                                     }
                                 })
                             }
-                        }) 
+                        })
                         newEp.appendChild(document.createTextNode("Episode "+ episodes[i].number));
                         listItem.appendChild(newEp)
-                        document.getElementById("ep-list").appendChild(listItem); 
+                        document.getElementById("ep-list").appendChild(listItem);
                     })(i);
                 })
             }
-            
+
         })
     })
 }
@@ -373,7 +374,7 @@ function searchResGoGo(link) {
     // Show info about anime
     $("#main").empty();
     link = link;
-    
+
     $("#main").load("view.html", function() {
         console.log("https://www1.gogoanime.ai"+link)
         downloader.getData("https://www1.gogoanime.ai"+link, function(info) {
@@ -401,10 +402,10 @@ function searchResGoGo(link) {
                     } else {
                         downloader.downloadGoGo(link, title, i+1, image, descT.text);
                     }
-                }) 
+                })
                 newEp.appendChild(document.createTextNode("Episode "+ (i+1)));
                 listItem.appendChild(newEp)
-                document.getElementById("ep-list").appendChild(listItem); 
+                document.getElementById("ep-list").appendChild(listItem);
             })(i);
         })
     })
@@ -426,7 +427,7 @@ function searchResGrab(link) {
     var getIt = async function(callback) {callback(await getAnime(link))}
     $("#main").load("view.html", function() {
         getIt(function(info) {
-            
+
             info = info
             console.log(info)
             replaceText("anime-title", info.title)
@@ -443,7 +444,7 @@ function searchResGrab(link) {
                         downloader.checkDownloadStarted();
                     } else {
                         console.log(info.episodes[i])
-		
+
                         links(info.episodes[i], function(dlink) {
                             let options  = {
                             buttons: ["Yes","Cancel"],
@@ -459,10 +460,10 @@ function searchResGrab(link) {
                             })
                         })
                     }
-                }) 
+                })
                 newEp.appendChild(document.createTextNode(info.episodes[i].title));
                 listItem.appendChild(newEp)
-                document.getElementById("ep-list").appendChild(listItem); 
+                document.getElementById("ep-list").appendChild(listItem);
             })(i);
         })
     })
@@ -484,7 +485,7 @@ function toggleNav() {
         document.getElementById("collapse-icon").classList.remove("fa-chevron-right")
         document.getElementById("left-bar").classList.remove("collapsed")
     }
-    
+
 }
 
 
@@ -504,7 +505,7 @@ function updateQueueHTML() {
                 listItem.appendChild(nestedDiv);
                 document.getElementById("queue").appendChild(listItem);
             })(i)
-            
+
         }
     } else {
         $("#main").empty();

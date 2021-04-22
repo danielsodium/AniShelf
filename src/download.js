@@ -49,7 +49,7 @@ function checkDownloadStarted() {
     console.log(downloadQueue.length)
     if (downloadQueue.length == 1) {
         downloadData = downloadQueue[0]
-        downloader.downloadEpisode(downloadData[0], downloadData[1], downloadData[2], downloadData[3], downloadData[4])
+        downloadEpisode(downloadData[0], downloadData[1], downloadData[2], downloadData[3], downloadData[4])
     }
 }
 
@@ -167,7 +167,7 @@ function downloadEpisode(link, title, epName, image, desc) {
     electron.ipcRenderer.invoke('show-notification', epName, false);
     videoID = uuid.v4()
     if (!fs.existsSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"))) {
-        fs.mkdirSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"));        
+        fs.mkdirSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"));
     }
     fs.readFile(path + "/data.json", 'utf8', (err, data) => {
         if (err) {
@@ -198,7 +198,7 @@ function downloadEpisode(link, title, epName, image, desc) {
                         return getEP(link, title, completed.id, stat.size)
                     })
                 }
-                
+
             } else {
                 animeList.anime[entry].episodes.push({
                     name: epName,
@@ -207,7 +207,7 @@ function downloadEpisode(link, title, epName, image, desc) {
                 })
                 console.log("HERE")
             }
-            
+
         }
         fs.writeFile(path + "/data.json", JSON.stringify(animeList), err => {
             if (err) {
@@ -263,7 +263,7 @@ function getEP(link, title, videoID, start) {
         });
         req.end();
     }
-    
+
 }
 
 function pipeDownload(inStream, fileStream, videoID) {
