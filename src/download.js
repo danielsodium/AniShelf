@@ -220,7 +220,8 @@ function downloadEpisode(link, title, epName, image, desc) {
 
 
 }
-function continueDownload(link, title,videoID, path) {
+function continueDownload(link, title,videoID) {
+    vidp = path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4"
     fs.stat(path, (err, stat) => {
         if(err) return getEP(link, title, videoID, 0)
         return getEP(link, title, videoID, stat.size)
@@ -228,6 +229,7 @@ function continueDownload(link, title,videoID, path) {
 }
 
 function getEP(link, title, videoID, start) {
+    console.log("GETTING EP")
     var options = {
         'method': 'GET',
         'hostname': 'cdn.twist.moe',
@@ -245,37 +247,44 @@ function getEP(link, title, videoID, start) {
     if (start == 0) {
         file = fs.createWriteStream(path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4");
         var req = getVid.request(options, function (response) {
-            pipeDownload(response, file, videoID);
+            pipeDownload(response, file, videoID, link, title);
         });
-        if(req.statusCode.toString()[0] != '2') return console.log(`Server responded with ${req.status} (${req.statusText})`)
         req.on('error', function(e) {
             console.log("Connection reset, retrying")
-            continueDownload(link, title, videoID, path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4")
+            continueDownload(link, title, videoID)
         });
         req.end();
     } else {
         file = fs.createWriteStream(path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4", {flags:'a'});
         var req = getVid.request(options, function (response) {
-            pipeDownload(response, file, videoID);
+            pipeDownload(response, file, videoID, link, title);
         });
         req.on('error', function(e) {
             console.log("Connection reset, retrying")
-            continueDownload(link, title, videoID, path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4")
+            continueDownload(link, title, videoID)
         });
         req.end();
     }
 
 }
 
-function pipeDownload(inStream, fileStream, videoID) {
+function pipeDownload(inStream, fileStream, videoID, link, title) {
     videoID = videoID;
     const fs = require('fs');
     fileStream = fileStream;
+    let timeout = null
     // get total size of the file
     let size = inStream.headers['content-length']
     console.log(size)
     let written = 0;
+    if(inStream.statusCode.toString()[0] != '2') return console.log(`Server responded with ${inStream.status} (${inStream.statusText})`)
     inStream.on('data', data => {
+        clearTimeout(timeout)
+        timeout = setTimeout(() => {
+            console.log("Connection reset, retrying")
+            continueDownload(link, title, videoID);
+            
+        }, 5000)
         // do the piping manually here.
         fileStream.write(data, () => {
             written += data.length;
@@ -284,12 +293,15 @@ function pipeDownload(inStream, fileStream, videoID) {
                 document.getElementById("progress-bar").value = percent;
                 document.getElementById("download-percent").innerHTML = percent + "%";
             }
-            if (percent == 100) {
-                downloadFinished(videoID);
-            }
             console.log(`written ${written} of ${size} bytes (${(written / size * 100).toFixed(2)}%)`);
         });
     });
+        inStream.on('end', () => {
+            clearTimeout(timeout);
+            downloadFinished(videoID)
+            
+        })
+    inStream.on('error', (err) => console.log(err))
 }
 
 downloadFinished = function (videoID) {
