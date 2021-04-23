@@ -2,6 +2,7 @@ const electron = require('electron');
 const $ = require('jquery');
 
 const arrayMove = require('array-move');
+const Plyr = require('plyr');
 
 const { getData, getQueue } = require('../src/download.js')
 const { getFour, getGoGo, getGrab } = require('../src/scraper.js')
@@ -88,6 +89,7 @@ function loadPlay(file, title, name) {
                 $("#main").empty();
                 $("#main").load("play.html", function() {
                     document.getElementById("vid-src").src = file;
+                    player = new Plyr('#vid');
                     //document.getElementById("vid").play();
                     document.getElementById("all").addEventListener('click', function() {
                         viewOffline(title);
@@ -117,6 +119,7 @@ function loadHome() {
                 // Making the recently played buttons
                 for (var i = 0; i < data.recent.length; i++) (function(i) {
                     var button = document.createElement("button")
+                    button.classList.add("hov")
                     button.classList.add("bordered");
                     var eTitle = document.createElement("p")
 
@@ -161,12 +164,29 @@ function viewOffline(title) {
             document.getElementById("cover-img").src = entry.image
             replaceText("anime-title", title)
             replaceText("description", entry.desc)
-
+            deleteB = document.createElement("button");
+            deleteB.appendChild(document.createTextNode("Toggle Delete"));
+            deleteB.style.float = "right"
+            deleteB.addEventListener('click', function() {
+                var x = document.getElementsByClassName("delete-b")
+                for (var i = 0; i < x.length; i++) {
+                    if (x[i].style.display == "inline") {
+                        x[i].style.display = "none";
+                    } else x[i].style.display = "inline";
+                }
+                /*
+                .forEach(element => {
+                    element.style[background-color] = "red";
+                });*/
+            })
+            document.getElementById("delete").appendChild(deleteB)
             // No need to swap any orders now
             for (var i = 0; i < entry.episodes.length; i++) (function(i) {
                 listItem = document.createElement("div");
                 listItem.setAttribute('id', entryIndex);
                 newEp = document.createElement("button");
+                newEp.classList.add("hov")
+                newEp.classList.add("check")
                 newEp.style.margin = "10px"
                 newEp.addEventListener('click', function() {
                     loadPlay(path+"/episodes/"+entry.title.replace(/[\W_]+/g,"-")+"/"+entry.episodes[i].id+".mp4", title, entry.episodes[i].name);
@@ -178,6 +198,7 @@ function viewOffline(title) {
                 deleteIcon = document.createElement("i");
                 deleteIcon.classList.add("fa")
                 deleteIcon.classList.add("fa-trash")
+                deleteIcon.classList.add("delete-b")
                 deleteLink.addEventListener('click', function() {
                     deleteEpisode(entry, entryIndex, entry.episodes[i].name, i)
                 })
@@ -235,11 +256,17 @@ function loadSearch() {
         document.getElementById("search").addEventListener('click', () => {
             $("#results").empty();
             twist.getTwist(document.getElementById("searchTerm").value, function(res) {
+                if (res.length == 0) {
+                    document.getElementById("results").appendChild(document.createTextNode("No results found."))
+                }
                 for (var i = 0; i < res.length; i++) (function(i){
                     console.log(res[i])
                     res = res;
                     var text = document.createElement("p")
                     var name = document.createElement("button");
+                    name.classList.add("hov")
+                    name.style.margin = "10px";
+
                     text.appendChild(document.createTextNode(res[i].title));
 
                     name.classList.add("bordered-wrap");
@@ -280,6 +307,8 @@ function searchResFour(link) {
             for (var i = 0; i < episodes.length; i++) (function(i) {
                 listItem = document.createElement("div");
                 newEp = document.createElement("button");
+                newEp.classList.add("hov")
+
                 newEp.style.margin = "10px"
                 newEp.addEventListener('click', function() {
                     if (settings.devMode) {
@@ -313,6 +342,9 @@ function searchResTwist(info) {
                     for (var i = 0; i < episodes.length; i++) (function(i) {
                         listItem = document.createElement("div");
                         newEp = document.createElement("button");
+                        newEp.style.margin = "10px";
+                        newEp.classList.add("hov");
+
                         listItem.id = "ep_"+(episodes[i].number);
                         newEp.style.margin = "10px"
                         newEp.addEventListener('click', function() {
@@ -342,6 +374,8 @@ function searchResTwist(info) {
                     for (var i = 0; i < episodes.length; i++) (function(i) {
                         listItem = document.createElement("div");
                         newEp = document.createElement("button");
+                        newEp.classList.add("hov")
+
                         listItem.id = "ep_"+(i+1);
                         newEp.style.margin = "10px"
                         newEp.addEventListener('click', function() {
@@ -393,6 +427,8 @@ function searchResGoGo(link) {
             for (var i = 0; i < parseInt(episodes); i++) (function(i) {
                 listItem = document.createElement("div");
                 newEp = document.createElement("button");
+                newEp.classList.add("hov")
+
                 listItem.id = "ep_"+(i+1);
                 newEp.style.margin = "10px"
                 newEp.addEventListener('click', function() {
@@ -435,6 +471,8 @@ function searchResGrab(link) {
             for (var i = 0; i < info.episodes.length; i++) (function(i) {
                 listItem = document.createElement("div");
                 newEp = document.createElement("button");
+                newEp.classList.add("hov")
+
                 listItem.id = "ep_"+(i+1);
                 newEp.style.margin = "10px"
                 newEp.addEventListener('click', function() {

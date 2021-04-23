@@ -14,6 +14,10 @@ const load = require('../src/loader.js')
 settings = {};
 
 
+openPath = function() {
+    console.log(path)
+    require('child_process').exec('start '+path);
+}
 function restartApp() {
     electron.remote.app.relaunch()
     electron.remote.app.exit()

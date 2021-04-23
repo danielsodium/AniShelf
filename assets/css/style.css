@@ -12,6 +12,10 @@ a:hover {
     cursor: pointer;
 }
 
+button {
+    margin: 0px;
+}
+
 * {
     font-family: "nunitolight";
 }
@@ -168,6 +172,10 @@ ul#results li .name {
     margin-top: -5px;
 }
 
+.delete-b {
+    display: none;
+}
+
 #settings {
     width: 50%;
     float: left;
@@ -197,7 +205,7 @@ ul#results li .name {
 }
 
 /* Radial Out */
-button {
+button.hov {
     display: inline-block;
     vertical-align: middle;
     -webkit-transform: perspective(1px) translateZ(0);
@@ -211,7 +219,7 @@ button {
     -webkit-transition-duration: 0.1s;
     transition-duration: 0.1s;
   }
-  button:before {
+  button.hov:before {
     content: "";
     position: absolute;
     z-index: -1;
@@ -230,10 +238,10 @@ button {
     -webkit-transition-timing-function: ease-out;
     transition-timing-function: ease-out;
   }
-  button:hover {
+  button.hov:hover {
     color: black;
   }
-  button:hover:before {
+  button.hov:hover:before {
     -webkit-transform: scale(2);
     transform: scale(2);
   }
@@ -400,4 +408,11 @@ video:focus {
   .closeApp i {
       margin-top: 5px;
       margin-left: -7px;
+  }
+
+  .plyr--full-ui.plyr--video .plyr__control--overlaid {
+    display: none !important;
+}
+:root {
+    --plyr-color-main: #bd6666;
   }

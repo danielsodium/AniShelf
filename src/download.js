@@ -260,8 +260,7 @@ function getEP(link, title, videoID, start) {
             pipeDownload(response, file, videoID, link, title);
         });
         req.on('error', function(e) {
-            console.log("Connection reset, retrying")
-            continueDownload(link, title, videoID)
+            console.log("Connection reset, please retry")
         });
         req.end();
     }
@@ -283,8 +282,7 @@ function pipeDownload(inStream, fileStream, videoID, link, title) {
         timeout = setTimeout(() => {
             console.log("Connection reset, retrying")
             continueDownload(link, title, videoID);
-            
-        }, 5000)
+        }, 10000)
         // do the piping manually here.
         fileStream.write(data, () => {
             written += data.length;
@@ -299,7 +297,6 @@ function pipeDownload(inStream, fileStream, videoID, link, title) {
         inStream.on('end', () => {
             clearTimeout(timeout);
             downloadFinished(videoID)
-            
         })
     inStream.on('error', (err) => console.log(err))
 }
@@ -340,6 +337,7 @@ downloadFinished = function (videoID) {
             downloadQueue.shift();
             if (downloadQueue.length > 0) {
                 downloadData = downloadQueue[0]
+                electron.ipcRenderer.invoke('show-notification', epName, true);
                 downloadEpisode(downloadData[0], downloadData[1], downloadData[2], downloadData[3], downloadData[4])
             }
         })

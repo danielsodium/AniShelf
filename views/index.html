@@ -8,10 +8,8 @@
     <link rel="stylesheet" href="../assets/css/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="../assets/css/skeleton.css">
     <link rel="stylesheet" href="../assets/css/style.css">
-    
-    <link rel="stylesheet" href="../assets/css/video-js.css"/>
-
     <script src="../src/script.js"></script>
+    <link rel="stylesheet" href="../assets/css/plyr.css" />
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
 
 </head>
@@ -25,32 +23,32 @@
       </header>
     <div id="left-bar" class="collapsed" style="padding-top:30px">
         <div style="margin-top: 20px;">
-            <button class="side-button" onclick="load.loadHome()">
+            <button class="side-button hov" onclick="load.loadHome()">
                 <i class="fa fa-home fa-2x"></i>
                 <span>Home</span>
             </button>
         </div>
         <hr />
         <div id="side-bar-list">
-            <button class="side-button" onclick="load.loadLibrary()">
+            <button class="side-button hov" onclick="load.loadLibrary()">
                 <i class="fa fa-book fa-2x"></i>
                 <span>Library</span>
             </button>
-            <button class="side-button" onclick="load.loadSearch()">
+            <button class="side-button hov" onclick="load.loadSearch()">
                 <i class="fa fa-search fa-2x"></i>
                 <span>Search</span>
             </button>
-            <button class="side-button" onclick="load.loadQueue()">
+            <button class="side-button hov" onclick="load.loadQueue()">
                 <i class="fa fa-download fa-2x"></i>
                 <span>Downloading</span>
             </button>
         </div>
         <hr />
         <section class="footer">
-            <button id="settings" style="display:none" onclick="load.loadSettings()">
+            <button id="settings" class="hov" style="display:none" onclick="load.loadSettings()">
                 <i id="settings-icon" class="fa fa-cog fa-2x"></i>
             </button>
-            <button id="collapse" onclick="load.toggleNav()">
+            <button id="collapse" class="hov" onclick="load.toggleNav()">
                 <i id="collapse-icon" class="fa fa-chevron-right fa-2x"></i>
             </button>
         </section>

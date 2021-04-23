@@ -1,11 +1,13 @@
 <div style="width:97%; margin-top: -25px;">
     <h1 id="title" style="font-size:20pt; margin-bottom:5px;"></h1>
-    <video id="vid" width="100%" height="auto" controls>
+    <video id="vid" width="100%" height="auto" playsinline autoplay controls>
         <source id="vid-src" src="" type="video/mp4">
     </video>
-    <button id="prev">Previous Episode</button>
-    <button onclick="skipOP()">Skip OP</button>
-   
-    <button style="float:right;" id="next">Next Episode</button>
-    <button style="float:right; margin-right:5px;" id="all">All Episodes</button>
+    <div style="margin-top:10px;">
+        <button id="prev">Previous Episode</button>
+        <button onclick="skipOP()">Skip OP</button>
+       
+        <button style="float:right;" id="next">Next Episode</button>
+        <button style="float:right; margin-right:5px;" id="all">All Episodes</button>
+    </div>
 </div>
