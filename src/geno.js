@@ -1,5 +1,6 @@
 const { https } = require("follow-redirects");
 const $ = require('jquery');
+const electron = require('electron')
 const downloader = require('../src/download.js')
 
 function scrapeGeno(options, postData, callback) {
@@ -108,6 +109,7 @@ function searchResGeno(link) {
 }
 
 function downloadGeno(link, title, img, desc, num) {
+    electron.ipcRenderer.invoke('show-notification', "Getting download link", title + " Episode " + num);
     title = title;
     img = img;
     desc = desc;

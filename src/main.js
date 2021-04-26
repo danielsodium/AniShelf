@@ -56,8 +56,8 @@ function downloadData() {
 
 ipcMain.handle('show-notification', (event, ...args) => {
   const notification = {
-      title: (args[1] ? "Download finished" : "Download started"),
-      body: `Downloaded ${args[0]}`
+      title: args[0],
+      body: args[1]
   }
   new Notification(notification).show()
 });

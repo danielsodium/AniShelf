@@ -3,7 +3,6 @@ const http = require('http')
 const electron = require('electron')
 const uuid = require('uuid');
 const Stream = require('stream').Transform;
-const { url } = require('inspector');
 
 module.exports = { checkIfDownloaded, getQueue, downloadEpisode, downloadGoGo, downloadFour, addQueue, checkDownloadStarted, getData };
 
@@ -159,12 +158,12 @@ function checkIfDownloaded(title, epName, callback) {
 }
 
 function downloadEpisode(link, title, epName, image, desc) {
-    electron.ipcRenderer.invoke('show-notification', epName, false);
+    electron.ipcRenderer.invoke('show-notification', "Starting Download", title + " " + epName);
     videoID = uuid.v4()
     if (!fs.existsSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"))) {
         fs.mkdirSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"));
         // Doesn't matter if this happens before or after, so save me the trouble of doing callbacks for the rest lol
-        https.get(image, function (response) {
+        https.get("https://genoanime.com"+image.substring(1), function (response) {
             var data = new Stream();
             response.on('data', function (chunk) {
                 data.push(chunk);
@@ -338,7 +337,7 @@ downloadFinished = function (videoID) {
     image = downloadQueue[0][3];
     desc = downloadQueue[0][4];
     videoId = videoID;
-    electron.ipcRenderer.invoke('show-notification', epName, true);
+    electron.ipcRenderer.invoke('show-notification', "Finished Download", title + " " + epName);
 
 
     
