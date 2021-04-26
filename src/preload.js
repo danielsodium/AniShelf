@@ -9,7 +9,8 @@ window.addEventListener('DOMContentLoaded', () => {
         fs.mkdirSync(path+"/images");
         settings = {
             devMode : false,
-            openExternal : false
+            openExternal : false,
+            scrape: "geno"
         }
         anime = {settings: settings, anime: [], recent : []}
         fs.appendFile(path+"/data.json", JSON.stringify(anime), function (err) {

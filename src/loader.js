@@ -7,6 +7,7 @@ const Plyr = require('plyr');
 const { getData, getQueue } = require('../src/download.js')
 const { getFour, getGoGo, getGrab } = require('../src/scraper.js')
 const twist = require('../src/twist.js')
+const geno = require('../src/geno.js')
 
 const downloader = require('../src/download.js')
 /*
@@ -16,7 +17,7 @@ const { getAnime, getQualities } = require('anigrab').sites.siteLoader(
 */
 const path = (electron.app || electron.remote.app).getPath('userData')+"/AppStorage"
 
-module.exports = { toggleNav, loadQueue, loadSettings, loadPlay, loadHome, loadLibrary, loadSearch, updateQueueHTML };
+module.exports = { replaceText, toggleNav, loadQueue, loadSettings, loadPlay, loadHome, loadLibrary, loadSearch, updateQueueHTML };
 
 function loadQueue () {
     $("#main").empty();
@@ -31,6 +32,7 @@ function loadSettings() {
     $("#main").load("settings.html", function() {
         document.getElementById("toggleDev").checked = settings.devMode;
         document.getElementById("toggleExternal").checked = settings.openExternal;
+        document.getElementById("scrape").value = settings.scrape;
         document.getElementById("mode").appendChild(document.createTextNode(remote.getGlobal( "allAnime" ).length == 0 ? "offline" : "online"))
 
     })
@@ -141,7 +143,7 @@ function loadHome() {
     })
 }
 
-const replaceText = (selector, text) => {
+function replaceText(selector, text) {
     const element = document.getElementById(selector)
     if (element) element.innerText = text
 }
@@ -210,7 +212,6 @@ function viewOffline(title) {
     })
 }
 
-
 function loadLibrary() {
     $("#main").empty();
     $("#main").load("library.html", function() {
@@ -255,34 +256,86 @@ function loadSearch() {
         });
         document.getElementById("search").addEventListener('click', () => {
             $("#results").empty();
-            twist.getTwist(document.getElementById("searchTerm").value, function(res) {
+            getAnimeSearch(document.getElementById("searchTerm").value, function(res) {
                 if (res.length == 0) {
                     document.getElementById("results").appendChild(document.createTextNode("No results found."))
                 }
-                for (var i = 0; i < res.length; i++) (function(i){
-                    res = res;
-                    var text = document.createElement("p")
-                    var name = document.createElement("button");
-                    name.classList.add("hov")
-                    name.style.margin = "10px";
+                if (settings.scrape == "twist") {
+                    for (var i = 0; i < res.length; i++) (function(i){
+                        res = res;
+                        var text = document.createElement("p")
+                        var name = document.createElement("button");
+                        name.classList.add("hov")
+                        name.style.margin = "10px";
 
-                    text.appendChild(document.createTextNode(res[i].title));
+                        text.appendChild(document.createTextNode(res[i].title));
 
-                    name.classList.add("bordered-wrap");
-                    name.appendChild(text)
+                        name.classList.add("bordered-wrap");
+                        name.appendChild(text)
 
-                    //searchdiv.appendChild(title)
-                    name.addEventListener('click', function() {
-                        searchResTwist(res[i].info)
-                    })
-
-                    document.getElementById("results").appendChild(name);
-                })(i);
+                        //searchdiv.appendChild(title)
+                        if (settings.scrape == "twist") {
+                            name.addEventListener('click', function() {
+                                searchResTwist(res[i].info)
+                            })
+                        } else if (settings.scrape == "geno") {
+                            name.addEventListener('click', function() {
+                                geno.searchResGeno(res[i].info)
+                            })
+                        }
+                        document.getElementById("results").appendChild(name);
+                    })(i);
+                } else if (settings.scrape == "geno") {
+                    for (var i = 0; i < res.length; i++) (function(i){ 
+                        res = res;
+                        var searchdiv = document.createElement("div")
+                        var img = document.createElement("img");                 // Create a <li> node
+                        var textnode = document.createTextNode(res[i].title);         // Create a text node
+                        img.src = "https://genoanime.com"+res[i].img.substring(1)
+                        var title = document.createElement("a");  
+                        title.className = "poster";
+                        title.appendChild(img)
+                        var name = document.createElement("a");  
+                        name.className = "name";
+                        name.appendChild(textnode)
+                        name.style.textDecoration = "none"
+                        name.style.color = "black"
+                        searchdiv.appendChild(title)
+                        searchdiv.appendChild(name)
+                        searchdiv.style.width = "200px"
+                        searchdiv.style.textAlign = "center"
+                        var linked = document.createElement("a")
+                        if (settings.scrape == "twist") {
+                            linked.addEventListener('click', function() {
+                                searchResTwist(res[i].info)
+                            })
+                        } else if (settings.scrape == "geno") {
+                            linked.addEventListener('click', function() {
+                                geno.searchResGeno(res[i].info)
+                            })
+                        }
+                        linked.appendChild(searchdiv)
+                        document.getElementById("results").appendChild(linked);
+                    })(i);
+                }
 
             })
         });
     })
 }
+
+function getAnimeSearch(val, callback) {
+    if (settings.scrape == "twist") {
+        twist.getTwist(val, function(i) {
+            callback(i)
+        })
+    } else if (settings.scrape == "geno") {
+        geno.getGeno(val, function(i) {
+            callback(i)
+        })
+    }
+}
+
 
 function searchResFour(link) {
     // Show info about anime

@@ -3,6 +3,7 @@ const http = require('http')
 const electron = require('electron')
 const uuid = require('uuid');
 const Stream = require('stream').Transform;
+const { url } = require('inspector');
 
 module.exports = { checkIfDownloaded, getQueue, downloadEpisode, downloadGoGo, downloadFour, addQueue, checkDownloadStarted, getData };
 
@@ -158,7 +159,6 @@ function checkIfDownloaded(title, epName, callback) {
 }
 
 function downloadEpisode(link, title, epName, image, desc) {
-    console.log(link)
     electron.ipcRenderer.invoke('show-notification', epName, false);
     videoID = uuid.v4()
     if (!fs.existsSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"))) {
@@ -234,19 +234,38 @@ function continueDownload(link, title,videoID) {
 }
 timeout = null
 function getEP(link, title, videoID, start) {
-    var options = {
-        'method': 'GET',
-        'hostname': 'cdn.twist.moe',
-        'path': link,
-        'headers': {
-            'Accept-Encoding': 'identity;q=1, *;q=0',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0',
-            'Range': `bytes=${start}-`,
-            'Referer': 'https://twist.moe/',
-            'Keep-Alive': 'timeout=60000'
-        },
-        'maxRedirects': 100
-    };
+    console.log(link)
+    if (settings.scrape == "twist") {
+        var options = {
+            'method': 'GET',
+            'hostname': 'cdn.twist.moe',
+            'path': link,
+            'headers': {
+                'Accept-Encoding': 'identity;q=1, *;q=0',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0',
+                'Range': `bytes=${start}-`,
+                'Referer': 'https://twist.moe/',
+                'Keep-Alive': 'timeout=60000'
+            },
+            'maxRedirects': 100
+        };
+    } else if (settings.scrape == "geno") {
+        var newrl = new URL(link)
+        var options = {
+            'method': 'GET',
+            'hostname': newrl.hostname,
+            'path': newrl.pathname,
+            'headers': {
+                'Accept-Encoding': 'identity;q=1, *;q=0',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0',
+                'Range': `bytes=${start}-`,
+                'Referer': 'https://twist.moe/',
+                'Keep-Alive': 'timeout=60000'
+            },
+            'maxRedirects': 100
+        };
+        console.log(newrl)
+    }
     var getVid = require('follow-redirects').https;
     if (start == 0) {
         file = fs.createWriteStream(path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4");

@@ -3,6 +3,10 @@
     <div>
         <p>Open video in external player <span><input id="toggleExternal" onClick="toggleSetting('openExternal')" type="checkbox"></span></p>
         <p>Super hax0r mode<span><input id="toggleDev" onClick="toggleSetting('devMode')" type="checkbox"></span></p>
+        <p>Video source: <select name="scrape" id="scrape" onchange="changeScrape(value)">
+            <option value="geno">genoanime.com</option>
+            <option value="twist">twist.moe</option>
+          </select></p>
         <button class="hov" onclick="openPath()">Open File Storage Folder</button>
         <br />
         <br />

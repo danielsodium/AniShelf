@@ -56,6 +56,12 @@ toggleSetting = function(setting) {
     saveSettingsFile();
 }
 
+changeScrape = function(val) {
+    settings.scrape = val;
+    console.log(val)
+    saveSettingsFile();
+}
+
 deleteEpisode = function(entry, entryIndex, entryName, i) {
     fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
         data = JSON.parse(data);
