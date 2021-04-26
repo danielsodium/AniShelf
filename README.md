@@ -16,6 +16,10 @@ Download the and unzip latest zip file from [releases](https://github.com/daniel
 - Clean UI
 - Skip OP button
 
+## To do
+
+ - Add scraping from Genoanime or Animixplay
+
 ## Playing episodes
 
 Anishelf opens episodes inside the application, but this can be changed to open externally in the OS default mp4 player.
