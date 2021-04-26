@@ -1,7 +1,9 @@
 
-module.exports = { getAnimax, getFour, getGoGo, getAnimeout, getGrab };
+module.exports = { getAnimax, getFour, getGoGo, getAnimeout };
 
 const { getData, getJSON, decryptSource } = require('../src/download.js')
+
+/*
 const { search, getQualities } = require('anigrab').sites.siteLoader(
     'twist'
 );
@@ -22,7 +24,7 @@ function getGrab(searchTerm, callback) {
         callback(returner);
     })
 }
-
+*/
 function getAnimax(searchTerm, callback) {
     getData("https://animax.to/?c=search&q="+searchTerm, function(info) {
         root = htmlparser.parse(info)

@@ -9,13 +9,12 @@
   },
   "devDependencies": {
     "electron": "12.0.2",
-    "video.js": "^7.11.8"
+    "video.js": "^7.11.8",
+    "electron-squirrel-startup": "^1.0.0"
   },
   "dependencies": {
-    "anigrab": "^1.9.11",
     "array-move": "^3.0.1",
     "crypto-js": "^4.0.0",
-    "electron-squirrel-startup": "^1.0.0",
     "follow-redirects": "^1.13.3",
     "jquery": "^3.6.0",
     "node-html-parser": "^3.1.4",

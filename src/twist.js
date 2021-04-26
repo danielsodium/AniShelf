@@ -40,7 +40,7 @@ function getMal(id, callback) {
 function getJSON(endpoint, callback) {
     var options = {
         'method': 'GET',
-        'hostname': 'twist.moe',
+        'hostname': 'api.twist.moe',
         'path': endpoint,
         'headers': {
             'x-access-token': accessToken,
@@ -80,12 +80,10 @@ function findMatches(wordToMatch, lang) {
   }
 
 function getTwist(searchTerm, callback) {
-    console.log("getting....")
     returner = [];
     results = findMatches(searchTerm, "e")
     for (var i = 0; i < results.length; i++) {
         var title = results[i].alt_title;
-        console.log(results[i].slug.slug)
         returner.push({
             info : results[i],
             title : title.trim(),

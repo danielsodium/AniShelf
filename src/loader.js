@@ -9,11 +9,11 @@ const { getFour, getGoGo, getGrab } = require('../src/scraper.js')
 const twist = require('../src/twist.js')
 
 const downloader = require('../src/download.js')
-
+/*
 const { getAnime, getQualities } = require('anigrab').sites.siteLoader(
     'twist'
 );
-
+*/
 const path = (electron.app || electron.remote.app).getPath('userData')+"/AppStorage"
 
 module.exports = { toggleNav, loadQueue, loadSettings, loadPlay, loadHome, loadLibrary, loadSearch, updateQueueHTML };
@@ -47,7 +47,6 @@ nextEP = (title, num) => {
         data = JSON.parse(data)
         var animeInd = data.anime.findIndex(element => element.title == title)
         var findEp = data.anime[animeInd].episodes.find(element => parseInt(element.name.substring(8)) === num)
-        console.log(num)
         if (findEp != undefined) {
             loadPlay(path+"/episodes/"+title.replace(/[\W_]+/g,"-")+"/"+findEp.id+".mp4", title, findEp.name);
         }
@@ -59,7 +58,6 @@ prevEP = (title, num) => {
         data = JSON.parse(data)
         var animeInd = data.anime.findIndex(element => element.title == title)
         var findEp = data.anime[animeInd].episodes.find(element => parseInt(element.name.substring(8)) === num)
-        console.log(num)
         if (findEp != undefined) {
             loadPlay(path+"/episodes/"+title.replace(/[\W_]+/g,"-")+"/"+findEp.id+".mp4", title, findEp.name);
         }
@@ -167,6 +165,7 @@ function viewOffline(title) {
             deleteB = document.createElement("button");
             deleteB.appendChild(document.createTextNode("Toggle Delete"));
             deleteB.style.float = "right"
+            deleteB.classList.add("hov")
             deleteB.addEventListener('click', function() {
                 var x = document.getElementsByClassName("delete-b")
                 for (var i = 0; i < x.length; i++) {
@@ -180,6 +179,7 @@ function viewOffline(title) {
                 });*/
             })
             document.getElementById("delete").appendChild(deleteB)
+            document.getElementById("delete").appendChild(document.createElement("br"))
             // No need to swap any orders now
             for (var i = 0; i < entry.episodes.length; i++) (function(i) {
                 listItem = document.createElement("div");
@@ -260,7 +260,6 @@ function loadSearch() {
                     document.getElementById("results").appendChild(document.createTextNode("No results found."))
                 }
                 for (var i = 0; i < res.length; i++) (function(i){
-                    console.log(res[i])
                     res = res;
                     var text = document.createElement("p")
                     var name = document.createElement("button");
@@ -296,7 +295,6 @@ function searchResFour(link) {
             cover = "https://4anime.to"+root.querySelector(".cover img").attrs.src
             document.getElementById("cover-img").src = cover
 
-            console.log(cover)
             title = root.querySelector(".titlemobile1 center").text
             replaceText("anime-title", title)
             desc = root.querySelectorAll("#description-mob p")
@@ -330,11 +328,11 @@ function searchResTwist(info) {
     // Show info about anime
     $("#main").empty();
     info = info;
-    console.log(info)
     slug = info.slug.slug
     $("#main").load("view.html", function() {
         replaceText("anime-title", info.alt_title)
         twist.getJSON("/api/anime/"+slug+"/sources", function(episodes) {
+            console.log(episodes)
             episodes = episodes
             if (info.mal_id == null) {
                     document.getElementById("cover-img").src = "https://ih1.redbubble.net/image.399938005.6245/fposter,small,wall_texture,product,750x1000.u5.jpg"
@@ -344,18 +342,18 @@ function searchResTwist(info) {
                         newEp = document.createElement("button");
                         newEp.style.margin = "10px";
                         newEp.classList.add("hov");
+                        console.log(twist.decryptSource(episodes[i].source).replaceAll(' ', '%20'))
 
                         listItem.id = "ep_"+(episodes[i].number);
                         newEp.style.margin = "10px"
                         newEp.addEventListener('click', function() {
                             if (settings.devMode) {
-                                console.log(twist.decryptSource(episodes[i].source))
                                 downloader.addQueue("https://www.w3schools.com/html/mov_bbb.mp4", info.alt_title, "Episode "+ episodes[i].number, "https://ih1.redbubble.net/image.399938005.6245/fposter,small,wall_texture,product,750x1000.u5.jpg", "No Description provided.");
                                 downloader.checkDownloadStarted();
                             } else {
                                 downloader.checkIfDownloaded(info.alt_title, "Episode "+ episodes[i].number, function(exists) {
                                     if (!exists) {
-                                        downloader.addQueue(encodeURI(twist.decryptSource(episodes[i].source)), info.alt_title, "Episode "+ episodes[i].number, "https://ih1.redbubble.net/image.399938005.6245/fposter,small,wall_texture,product,750x1000.u5.jpg", "No Description provided.");
+                                        downloader.addQueue(twist.decryptSource(episodes[i].source).replaceAll(' ', '%20'), info.alt_title, "Episode "+ episodes[i].number, "https://ih1.redbubble.net/image.399938005.6245/fposter,small,wall_texture,product,750x1000.u5.jpg", "No Description provided.");
                                         downloader.checkDownloadStarted();
                                     }
                                 })
@@ -380,7 +378,6 @@ function searchResTwist(info) {
                         newEp.style.margin = "10px"
                         newEp.addEventListener('click', function() {
                             if (settings.devMode) {
-                                console.log(twist.decryptSource(episodes[i].source))
                                 downloader.addQueue("https://www.w3schools.com/html/mov_bbb.mp4", info.alt_title, "Episode "+ episodes[i].number, malInfo.img, malInfo.desc);
                                 downloader.checkDownloadStarted();
                             } else {
@@ -410,11 +407,9 @@ function searchResGoGo(link) {
     link = link;
 
     $("#main").load("view.html", function() {
-        console.log("https://www1.gogoanime.ai"+link)
         downloader.getData("https://www1.gogoanime.ai"+link, function(info) {
             root = htmlparser.parse(info)
             episodes = root.querySelector("#episode_page li .active").attrs.ep_end
-            console.log(episodes)
             image = root.querySelector(".anime_info_body_bg img").attrs.src
             document.getElementById("cover-img").src = image
             var title = root.querySelector(".anime_info_body_bg h1").text
@@ -446,7 +441,7 @@ function searchResGoGo(link) {
         })
     })
 }
-
+/*
 async function links(episodeURL, callback) {
     console.log(episodeURL)
     data = await getQualities(episodeURL.url)
@@ -505,7 +500,7 @@ function searchResGrab(link) {
             })(i);
         })
     })
-}
+}*/
 
 function toggleNav() {
     if (document.getElementById("left-bar").style.width === "200px") {
@@ -529,7 +524,6 @@ function toggleNav() {
 
 function updateQueueHTML() {
     downloadQueue = getQueue()
-    console.log(downloadQueue)
     if (downloadQueue.length != 0) {
         document.getElementById("download-title").innerHTML = downloadQueue[0][1]+" "+downloadQueue[0][2];
         if (downloadQueue.length > 1) {

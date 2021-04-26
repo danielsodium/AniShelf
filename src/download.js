@@ -1,11 +1,8 @@
 const https = require('https');
 const http = require('http')
+const electron = require('electron')
 const uuid = require('uuid');
 const Stream = require('stream').Transform;
-const { getAnime, getQualities } = require('anigrab').sites.siteLoader(
-    'twist'
-);
-
 
 module.exports = { checkIfDownloaded, getQueue, downloadEpisode, downloadGoGo, downloadFour, addQueue, checkDownloadStarted, getData };
 
@@ -46,7 +43,6 @@ function addQueue(link, title, epNum, img, desc) {
 }
 
 function checkDownloadStarted() {
-    console.log(downloadQueue.length)
     if (downloadQueue.length == 1) {
         downloadData = downloadQueue[0]
         downloadEpisode(downloadData[0], downloadData[1], downloadData[2], downloadData[3], downloadData[4])
@@ -129,10 +125,8 @@ function getFourEp(link, callback) {
 
 
 function downloadGoGo(link, title, epNum, img, desc) {
-    console.log("HERE")
     getData("https://www1.gogoanime.ai/" + link.slice(9) + "-episode-" + epNum, function (data) {
         root = htmlparser.parse(data)
-        console.log(root.querySelector(".streamtape a").attrs["data-video"])
         getData(root.querySelector(".streamtape a").attrs["data-video"], function (data) {
             var a = data.split("document.getElementById('vid'+'eolink').innerHTML =")[1].split("</script>")[0]
             var edited = ("https:"+a.replace(/['"+; ]+/g, '').trim()).substring(22)
@@ -164,10 +158,22 @@ function checkIfDownloaded(title, epName, callback) {
 }
 
 function downloadEpisode(link, title, epName, image, desc) {
+    console.log(link)
     electron.ipcRenderer.invoke('show-notification', epName, false);
     videoID = uuid.v4()
     if (!fs.existsSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"))) {
         fs.mkdirSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"));
+        // Doesn't matter if this happens before or after, so save me the trouble of doing callbacks for the rest lol
+        https.get(image, function (response) {
+            var data = new Stream();
+            response.on('data', function (chunk) {
+                data.push(chunk);
+            });
+
+            response.on('end', function () {
+                fs.writeFileSync(path + "/images/" + title.replace(/[\W_]+/g, "-") + ".jpg", data.read());
+            });
+        }).end();
     }
     fs.readFile(path + "/data.json", 'utf8', (err, data) => {
         if (err) {
@@ -179,7 +185,7 @@ function downloadEpisode(link, title, epName, image, desc) {
         if (entry == -1) {
             animeList.anime.push({
                 title: title,
-                image: path + "/images/" + title.replace(/[\W_]+/g, "-") + ".png",
+                image: path + "/images/" + title.replace(/[\W_]+/g, "-") + ".jpg",
                 desc: desc,
                 episodes: [{
                     name: epName,
@@ -205,7 +211,6 @@ function downloadEpisode(link, title, epName, image, desc) {
                     id: videoID,
                     complete: false
                 })
-                console.log("HERE")
             }
 
         }
@@ -222,14 +227,13 @@ function downloadEpisode(link, title, epName, image, desc) {
 }
 function continueDownload(link, title,videoID) {
     vidp = path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4"
-    fs.stat(path, (err, stat) => {
-        if(err) return getEP(link, title, videoID, 0)
+    fs.stat(vidp, (err, stat) => {
+        //if(err) return getEP(link, title, videoID, 0)
         return getEP(link, title, videoID, stat.size)
     })
 }
-
+timeout = null
 function getEP(link, title, videoID, start) {
-    console.log("GETTING EP")
     var options = {
         'method': 'GET',
         'hostname': 'cdn.twist.moe',
@@ -250,7 +254,8 @@ function getEP(link, title, videoID, start) {
             pipeDownload(response, file, videoID, link, title);
         });
         req.on('error', function(e) {
-            console.log("Connection reset, retrying")
+            file.end()
+            console.log(e)
             continueDownload(link, title, videoID)
         });
         req.end();
@@ -260,7 +265,10 @@ function getEP(link, title, videoID, start) {
             pipeDownload(response, file, videoID, link, title);
         });
         req.on('error', function(e) {
-            console.log("Connection reset, please retry")
+            file.end()
+            console.log(e)
+            clearTimeout(timeout)
+            continueDownload(link, title, videoID)
         });
         req.end();
     }
@@ -271,16 +279,15 @@ function pipeDownload(inStream, fileStream, videoID, link, title) {
     videoID = videoID;
     const fs = require('fs');
     fileStream = fileStream;
-    let timeout = null
     // get total size of the file
     let size = inStream.headers['content-length']
-    console.log(size)
     let written = 0;
     if(inStream.statusCode.toString()[0] != '2') return console.log(`Server responded with ${inStream.status} (${inStream.statusText})`)
     inStream.on('data', data => {
         clearTimeout(timeout)
         timeout = setTimeout(() => {
-            console.log("Connection reset, retrying")
+            console.log("Timed out?")
+            inStream.destroy();
             continueDownload(link, title, videoID);
         }, 10000)
         // do the piping manually here.
@@ -291,14 +298,18 @@ function pipeDownload(inStream, fileStream, videoID, link, title) {
                 document.getElementById("progress-bar").value = percent;
                 document.getElementById("download-percent").innerHTML = percent + "%";
             }
-            console.log(`written ${written} of ${size} bytes (${(written / size * 100).toFixed(2)}%)`);
+            //console.log(`written ${written} of ${size} bytes (${(written / size * 100).toFixed(2)}%)`);
         });
     });
         inStream.on('end', () => {
             clearTimeout(timeout);
             downloadFinished(videoID)
         })
-    inStream.on('error', (err) => console.log(err))
+    inStream.on('error', (err) => {
+        console.log(err)
+        clearTimeout(timeout)
+        inStream.destroy();
+    })
 }
 
 downloadFinished = function (videoID) {
@@ -308,18 +319,10 @@ downloadFinished = function (videoID) {
     image = downloadQueue[0][3];
     desc = downloadQueue[0][4];
     videoId = videoID;
+    electron.ipcRenderer.invoke('show-notification', epName, true);
 
-    // Doesn't matter if this happens before or after, so save me the trouble of doing callbacks for the rest lol
-    https.get(image, function (response) {
-        var data = new Stream();
-        response.on('data', function (chunk) {
-            data.push(chunk);
-        });
 
-        response.on('end', function () {
-            fs.writeFileSync(path + "/images/" + title.replace(/[\W_]+/g, "-") + ".png", data.read());
-        });
-    }).end();
+    
     fs.readFile(path + "/data.json", 'utf8', (err, data) => {
         if (err) {
             console.error(err)
@@ -337,7 +340,6 @@ downloadFinished = function (videoID) {
             downloadQueue.shift();
             if (downloadQueue.length > 0) {
                 downloadData = downloadQueue[0]
-                electron.ipcRenderer.invoke('show-notification', epName, true);
                 downloadEpisode(downloadData[0], downloadData[1], downloadData[2], downloadData[3], downloadData[4])
             }
         })
