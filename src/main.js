@@ -29,7 +29,6 @@ app.whenReady().then(() => {
   loadingEvents.on('finished', () => {
     window.loadFile(path.join(path.dirname(__dirname),'views/index.html'));
  }) 
- setTimeout(() => loadingEvents.emit('finished'), 3000)
  downloadData();
   /*
   app.on('activate', () => {

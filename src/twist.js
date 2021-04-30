@@ -1,7 +1,11 @@
+const electron = require('electron');
+
 const { https } = require("follow-redirects");
 const { ipcRenderer, remote } = require( "electron" );
 const crypto = require('crypto-js');
 const aes = require('crypto-js/aes');
+const fs = require('fs')
+const path = (electron.app || electron.remote.app).getPath('userData')+"/AppStorage"
 
 const { getData } = require('../src/download.js')
 
@@ -16,9 +20,17 @@ const
 //allAnime = [];
 
 function getAll(callback) {
-    getJSON("/api/anime", function(info) {
+  fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
+    data = JSON.parse(data)
+    if (data.settings.scrape == "twist") {
+      getJSON("/api/anime", function(info) {
         callback(info);
-    });
+      });
+    } else {
+      callback([]);
+    }
+    
+  })
 }
 
 function decryptSource(source){

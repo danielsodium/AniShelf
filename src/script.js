@@ -7,26 +7,39 @@ const remote = electron.remote;
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const path = (electron.app || electron.remote.app).getPath('userData')+"/AppStorage"
-const load = require('../src/loader.js')
+const load = require('../src/loader.js');
 
 
 
 settings = {};
+
+clearRecents = function() {
+    fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
+        data = JSON.parse(data);
+        data.recent = [];
+        fs.writeFile(path+"/data.json", JSON.stringify(data), err => {
+            console.log("done")
+        })
+    })
+}
 
 
 openPath = function() {
     console.log(path)
     require('child_process').exec('start '+path);
 }
+
 function restartApp() {
     electron.remote.app.relaunch()
     electron.remote.app.exit()
 }
 
-loadSettingsFile = function() {
+loadSettingsFile = function(callback) {
+    if (load.getOnPlayer()) load.exitPlay();
     fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
         data = JSON.parse(data)
         settings = data.settings;
+        callback();
     })
 }
 
@@ -46,8 +59,15 @@ saveSettingsFile = function() {
 }
 
 closeApp = () => {
-    let w = remote.getCurrentWindow()
-    w.close()
+    if (load.getOnPlayer()) {
+        load.exitPlay()
+        let w = remote.getCurrentWindow()
+        w.close()
+    } else {
+        let w = remote.getCurrentWindow()
+        w.close()
+    }
+    
 }
 
 toggleSetting = function(setting) {
@@ -92,9 +112,9 @@ deleteEpisode = function(entry, entryIndex, entryName, i) {
 window.onload=function(){
     // Load main content
     $(function(){
-        loadSettingsFile();
-        load.loadHome();
+        loadSettingsFile(function() {
+            load.loadHome();
+        })
     })
-    
 }
 

@@ -160,18 +160,13 @@ function checkIfDownloaded(title, epName, callback) {
 function downloadEpisode(link, title, epName, image, desc) {
     electron.ipcRenderer.invoke('show-notification', "Starting Download", title + " " + epName);
     videoID = uuid.v4()
+    console.log("https://genoanime.com"+image.substring(1))
     if (!fs.existsSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"))) {
         fs.mkdirSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"));
         // Doesn't matter if this happens before or after, so save me the trouble of doing callbacks for the rest lol
+        console.log("https://genoanime.com"+image.substring(1))
         https.get("https://genoanime.com"+image.substring(1), function (response) {
-            var data = new Stream();
-            response.on('data', function (chunk) {
-                data.push(chunk);
-            });
-
-            response.on('end', function () {
-                fs.writeFileSync(path + "/images/" + title.replace(/[\W_]+/g, "-") + ".jpg", data.read());
-            });
+            response.pipe(fs.createWriteStream(path + "/images/" + title.replace(/[\W_]+/g, "-") + ".jpg"))
         }).end();
     }
     fs.readFile(path + "/data.json", 'utf8', (err, data) => {
@@ -244,7 +239,6 @@ function getEP(link, title, videoID, start) {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0',
                 'Range': `bytes=${start}-`,
                 'Referer': 'https://twist.moe/',
-                'Keep-Alive': 'timeout=60000'
             },
             'maxRedirects': 100
         };
@@ -259,7 +253,7 @@ function getEP(link, title, videoID, start) {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0',
                 'Range': `bytes=${start}-`,
                 'Referer': 'https://twist.moe/',
-                'Keep-Alive': 'timeout=60000'
+                'Keep-Alive': 'timeout=10000'
             },
             'maxRedirects': 100
         };

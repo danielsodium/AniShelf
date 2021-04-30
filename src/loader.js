@@ -5,11 +5,14 @@ const arrayMove = require('array-move');
 const Plyr = require('plyr');
 
 const { getData, getQueue } = require('../src/download.js')
-const { getFour, getGoGo, getGrab } = require('../src/scraper.js')
 const twist = require('../src/twist.js')
 const geno = require('../src/geno.js')
 
-const downloader = require('../src/download.js')
+const downloader = require('../src/download.js');
+const { exists } = require('original-fs');
+
+onPlayer = false;
+
 /*
 const { getAnime, getQualities } = require('anigrab').sites.siteLoader(
     'twist'
@@ -17,9 +20,14 @@ const { getAnime, getQualities } = require('anigrab').sites.siteLoader(
 */
 const path = (electron.app || electron.remote.app).getPath('userData')+"/AppStorage"
 
-module.exports = { replaceText, toggleNav, loadQueue, loadSettings, loadPlay, loadHome, loadLibrary, loadSearch, updateQueueHTML };
+module.exports = { getOnPlayer, exitPlay, replaceText, toggleNav, loadQueue, loadSettings, loadPlay, loadHome, loadLibrary, loadSearch, updateQueueHTML };
+
+function getOnPlayer() {
+    return onPlayer
+}
 
 function loadQueue () {
+    if (onPlayer) exitPlay();
     $("#main").empty();
     $("#main").load("queue.html", function() {
         updateQueueHTML();
@@ -28,13 +36,14 @@ function loadQueue () {
 
 
 function loadSettings() {
+    if (onPlayer) exitPlay();
+
     $("#main").empty();
     $("#main").load("settings.html", function() {
         document.getElementById("toggleDev").checked = settings.devMode;
         document.getElementById("toggleExternal").checked = settings.openExternal;
         document.getElementById("scrape").value = settings.scrape;
         document.getElementById("mode").appendChild(document.createTextNode(remote.getGlobal( "allAnime" ).length == 0 ? "offline" : "online"))
-
     })
 }
 
@@ -50,6 +59,7 @@ nextEP = (title, num) => {
         var animeInd = data.anime.findIndex(element => element.title == title)
         var findEp = data.anime[animeInd].episodes.find(element => parseInt(element.name.substring(8)) === num)
         if (findEp != undefined) {
+            exitPlay();
             loadPlay(path+"/episodes/"+title.replace(/[\W_]+/g,"-")+"/"+findEp.id+".mp4", title, findEp.name);
         }
     })
@@ -61,27 +71,42 @@ prevEP = (title, num) => {
         var animeInd = data.anime.findIndex(element => element.title == title)
         var findEp = data.anime[animeInd].episodes.find(element => parseInt(element.name.substring(8)) === num)
         if (findEp != undefined) {
+            exitPlay();
             loadPlay(path+"/episodes/"+title.replace(/[\W_]+/g,"-")+"/"+findEp.id+".mp4", title, findEp.name);
         }
     })
 }
 
-function loadPlay(file, title, name) {
+function exitPlay() {
+    onPlayer = false;
+    timeStamp = document.getElementById("vid").currentTime
     fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
         data = JSON.parse(data)
+        data.recent[0].position = timeStamp;
+        fs.writeFile(path+"/data.json", JSON.stringify(data), err => {
+        })
+    })
+}
+
+function loadPlay(file, title, name) {
+    onPlayer = true;
+    fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
+        data = JSON.parse(data)
+        position = 0;
+        //console.log(data.recent)
+        var index = data.recent.findIndex(e => (e.file == file))
         newD = {
             title: title,
             name: name,
+            position: 0,
             file: file
         }
-        var index = data.recent.findIndex(e => (e.file == file))
         if (index == -1) {
             data.recent.unshift(newD)
-            if (data.recent.length > 3) {
-                data.recent.pop();
-            }
         } else {
             data.recent = arrayMove(data.recent,index, 0)
+            
+            position = data.recent[0].position;
         }
         fs.writeFile(path+"/data.json", JSON.stringify(data), err => {
             if (settings.openExternal) electron.shell.openPath(file)
@@ -90,8 +115,10 @@ function loadPlay(file, title, name) {
                 $("#main").load("play.html", function() {
                     document.getElementById("vid-src").src = file;
                     player = new Plyr('#vid');
+                    document.getElementById("vid").currentTime = position;
                     //document.getElementById("vid").play();
                     document.getElementById("all").addEventListener('click', function() {
+                        exitPlay();
                         viewOffline(title);
                     })
                     document.getElementById("title").appendChild(document.createTextNode(title + " " + name))
@@ -109,37 +136,41 @@ function loadPlay(file, title, name) {
 }
 
 function loadHome() {
+    if (onPlayer) exitPlay();
     $("#main").empty();
     $("#main").load("home.html", function() {
-        fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
-            data = JSON.parse(data)
-            if (data.recent.length == 0) {
-                document.getElementById("recent-title").style.display = "none";
-            } else {
-                // Making the recently played buttons
-                for (var i = 0; i < data.recent.length; i++) (function(i) {
-                    var button = document.createElement("button")
-                    button.classList.add("hov")
-                    button.classList.add("bordered");
-                    var eTitle = document.createElement("p")
+        if (settings.devMode != undefined && !settings.devMode) {
 
-                    var icon = document.createElement("i")
-                    var aTitle = document.createElement("p")
-                    aTitle.appendChild(document.createTextNode(data.recent[i].title))
-                    icon.classList.add("fa")
-                    icon.classList.add("fa-play")
+            fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
+                data = JSON.parse(data)
+                if (data.recent.length == 0) {
+                    document.getElementById("recent-title").style.display = "none";
+                } else {
+                    // Making the recently played buttons
+                    for (var i = 0; i < Math.min(data.recent.length, 3); i++) (function(i) {
+                        var button = document.createElement("button")
+                        button.classList.add("hov")
+                        button.classList.add("bordered");
+                        var eTitle = document.createElement("p")
 
-                    eTitle.appendChild(icon);
-                    eTitle.appendChild(document.createTextNode(data.recent[i].name));
-                    button.appendChild(eTitle);
-                    button.appendChild(aTitle);
-                    button.addEventListener('click', function() {
-                        loadPlay(data.recent[i].file, data.recent[i].title, data.recent[i].name);
-                    })
-                    document.getElementById("recents").appendChild(button)
-                })(i)
-            }
-        })
+                        var icon = document.createElement("i")
+                        var aTitle = document.createElement("p")
+                        aTitle.appendChild(document.createTextNode(data.recent[i].title))
+                        icon.classList.add("fa")
+                        icon.classList.add("fa-play")
+
+                        eTitle.appendChild(icon);
+                        eTitle.appendChild(document.createTextNode(data.recent[i].name));
+                        button.appendChild(eTitle);
+                        button.appendChild(aTitle);
+                        button.addEventListener('click', function() {
+                            loadPlay(data.recent[i].file, data.recent[i].title, data.recent[i].name);
+                        })
+                        document.getElementById("recents").appendChild(button)
+                    })(i)
+                }
+            })
+        }
     })
 }
 
@@ -213,38 +244,44 @@ function viewOffline(title) {
 }
 
 function loadLibrary() {
+    if (onPlayer) exitPlay();
+
     $("#main").empty();
     $("#main").load("library.html", function() {
-        fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
-            entries = JSON.parse(data).anime
-            for (var i = 0; i < entries.length; i++) (function(i){
-                var searchdiv = document.createElement("li")
-                var img = document.createElement("img");                 // Create a <li> node
-                var textnode = document.createTextNode(entries[i].title);         // Create a text node
-                img.src = entries[i].image
-                var title = document.createElement("a");
-                title.className = "poster";
-                title.appendChild(img)
-                var name = document.createElement("a");
-                name.className = "name";
-                name.appendChild(textnode)
+        if (!settings.devMode) {
+            fs.readFile(path+"/data.json", 'utf8' , (err, data) => {
+                entries = JSON.parse(data).anime
+                for (var i = 0; i < entries.length; i++) (function(i){
+                    var searchdiv = document.createElement("li")
+                    var img = document.createElement("img");                 // Create a <li> node
+                    var textnode = document.createTextNode(entries[i].title);         // Create a text node
+                    img.src = entries[i].image
+                    var title = document.createElement("a");
+                    title.className = "poster";
+                    title.appendChild(img)
+                    var name = document.createElement("a");
+                    name.className = "name";
+                    name.appendChild(textnode)
 
-                searchdiv.appendChild(title)
-                searchdiv.appendChild(name)
-                var linked = document.createElement("a")
-                linked.addEventListener('click', function() {
-                    viewOffline(entries[i].title)
-                })
-                linked.appendChild(searchdiv)
-                document.getElementById("results").appendChild(linked);
-            })(i);
+                    searchdiv.appendChild(title)
+                    searchdiv.appendChild(name)
+                    var linked = document.createElement("a")
+                    linked.addEventListener('click', function() {
+                        viewOffline(entries[i].title)
+                    })
+                    linked.appendChild(searchdiv)
+                    document.getElementById("results").appendChild(linked);
+                })(i);
 
 
-        })
+            })
+        }
     })
 }
 
 function loadSearch() {
+    if (onPlayer) exitPlay();
+
     $("#main").empty();
     $("#main").load("search.html", function() {
         var input = document.getElementById("searchTerm");
