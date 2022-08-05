@@ -27,7 +27,7 @@ Anishelf opens episodes inside the application, but this can be changed to open 
 
 ## Disclaimer
 
-I do not take responsibility for what you use this application for. I created this for the purpose of learning electron.js.
+I do not take responsibility for what you use this application for. I created this for the purpose of learning electron.js. I kind of also only update this if I'm going on a trip and need to download anime to watch on the way.
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
