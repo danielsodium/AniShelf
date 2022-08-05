@@ -28,8 +28,8 @@ app.whenReady().then(() => {
   window.loadFile(path.join(path.dirname(__dirname),'views/splash.html'));
   loadingEvents.on('finished', () => {
     window.loadFile(path.join(path.dirname(__dirname),'views/index.html'));
- }) 
- downloadData();
+  }) 
+  downloadData();
   /*
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -47,10 +47,8 @@ app.on('window-all-closed', () => {
 
 
 function downloadData() {
-  getAll(function(info) {
-      global.allAnime = info;
-      loadingEvents.emit('finished')
-  });
+  setTimeout(() => {  loadingEvents.emit('finished'); }, 2000);
+      
 }
 
 ipcMain.handle('show-notification', (event, ...args) => {

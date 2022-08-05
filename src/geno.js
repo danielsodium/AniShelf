@@ -65,6 +65,7 @@ function getGeno(searchTerm, callback) {
 
 function searchResGeno(link) {
     // Show info about anime
+    console.log("A");
     $("#main").empty();
     link = link;
     var options = {
@@ -109,6 +110,7 @@ function searchResGeno(link) {
 }
 
 function downloadGeno(link, title, img, desc, num) {
+    console.log(link);
     electron.ipcRenderer.invoke('show-notification', "Getting download link", title + " Episode " + num);
     title = title;
     img = img;
@@ -122,6 +124,7 @@ function downloadGeno(link, title, img, desc, num) {
         'maxRedirects': 20
     };
     scrapeGeno(options, null, function(info) {
+        console.log(info);
         var cut = info.split("?id='+'")[1].split("&")[0]
         console.log(cut)
         options = {

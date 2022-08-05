@@ -3,19 +3,17 @@
     <div>
         <p>Open video in external player <span><input id="toggleExternal" onClick="toggleSetting('openExternal')" type="checkbox"></span></p>
         <p>Super hax0r mode<span><input id="toggleDev" onClick="toggleSetting('devMode')" type="checkbox"></span></p>
-        <p>Video source: <select name="scrape" id="scrape" onchange="changeScrape(value)">
-            <option value="geno">genoanime.com</option>
-            <option value="twist">twist.moe</option>
+        <p>Video source: <select name="scrape" id="scrape"  onchange="changeScrape(value)">
+            <option value="geno" selected>Allanime</option>
           </select></p>
         <button class="hov" style="margin-bottom:10px" onclick="clearRecents()">Clear video save positions</button>
         <br />
         <button class="hov" onclick="openPath()">Open File Storage Folder</button>
         <br />
         <br />
-        <p>Currently in <span id="mode"></span> mode (Only applies to twist).</p>
-        <button class="hov" onclick="restartApp()">Restart</button>
+        <button class="hov" onclick="restartApp()">Restart Anishelf</button>
         <br />
         <br />
-        <p>v0.1.3</p>
+        <p>v0.1.4</p>
     </div>
 </div>

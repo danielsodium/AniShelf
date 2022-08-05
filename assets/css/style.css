@@ -406,6 +406,11 @@ video:focus {
       z-index: -1;
   }
 
+  .closeApp:hover {
+    color:white;    
+    background-color:red;
+  }
+
   .closeApp i {
       margin-top: 5px;
       margin-left: -7px;

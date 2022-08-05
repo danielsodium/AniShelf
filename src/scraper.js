@@ -1,5 +1,5 @@
 
-module.exports = { getAnimax, getFour, getGoGo, getAnimeout };
+module.exports = { getAnimax, getFour, getGoGo, getAnimeout, getAllAni };
 
 const { getData, getJSON, decryptSource } = require('../src/download.js')
 
@@ -25,6 +25,13 @@ function getGrab(searchTerm, callback) {
     })
 }
 */
+
+function getAllAni(searchTerm, callback) {
+    getData(`https://allanime.site/graphql?variables=%7B%22search%22%3A%7B%22allowAdult%22%3Afalse%2C%22allowUnknown%22%3Afalse%2C%22query%22%3A%22${searchTerm}%22%7D%2C%22limit%22%3A26%2C%22page%22%3A1%2C%22translationType%22%3A%22sub%22%2C%22countryOrigin%22%3A%22ALL%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22d2670e3e27ee109630991152c8484fce5ff5e280c523378001f9a23dc1839068%22%7D%7D`, function(info) {
+        callback(JSON.parse(info).data.shows.edges);
+    })
+}
+
 function getAnimax(searchTerm, callback) {
     getData("https://animax.to/?c=search&q="+searchTerm, function(info) {
         root = htmlparser.parse(info)

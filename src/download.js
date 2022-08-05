@@ -4,9 +4,10 @@ const electron = require('electron')
 const uuid = require('uuid');
 const Stream = require('stream').Transform;
 
-module.exports = { checkIfDownloaded, getQueue, downloadEpisode, downloadGoGo, downloadFour, addQueue, checkDownloadStarted, getData };
+module.exports = { checkIfDownloaded, getQueue, addQueue, checkDownloadStarted, getData };
 
 downloadQueue = [];
+timeout = null
 
 
 function getQueue() {
@@ -38,8 +39,8 @@ function getData(link, callback) {
 
 }
 
-function addQueue(link, title, epNum, img, desc) {
-    downloadQueue.push([link, title, epNum, img, desc])
+function addQueue(link, title, epNum, img) {
+    downloadQueue.push([link, title, epNum, img, "desc"])
 }
 
 function checkDownloadStarted() {
@@ -47,95 +48,6 @@ function checkDownloadStarted() {
         downloadData = downloadQueue[0]
         downloadEpisode(downloadData[0], downloadData[1], downloadData[2], downloadData[3], downloadData[4])
     }
-}
-
-function downloadFour(link, title, epNum, img, desc) {
-    getFourEp(link.substring(17), function (data) {
-        root = htmlparser.parse(data);
-        downloadQueue.push([root.querySelector("video source").attrs.src, title, title + " " + epNum, img, desc]);
-        checkDownloadStarted();
-    })
-}
-
-function getFourEp(link, callback) {
-    var getDa = require('follow-redirects').https;
-
-    var options = {
-        'method': 'GET',
-        'hostname': '4anime.to',
-        'path': link,
-        'headers': {
-            'Cookie': '__cfduid=d8f30551cdf7b386613e3afb7a42d92a61618620457'
-        },
-        'maxRedirects': 20
-    };
-
-    var req = getDa.request(options, function (res) {
-        var chunks = [];
-
-        res.on("data", function (chunk) {
-            chunks.push(chunk);
-        });
-
-        res.on("end", function (chunk) {
-            var body = Buffer.concat(chunks);
-            callback(body.toString());
-        });
-
-        res.on("error", function (error) {
-            console.error(error);
-        });
-    });
-
-    req.end();
-}
-
-function getFourEp(link, callback) {
-    var getDa = require('follow-redirects').https;
-
-    var options = {
-        'method': 'GET',
-        'hostname': '4anime.to',
-        'path': link,
-        'headers': {
-            'Cookie': '__cfduid=d8f30551cdf7b386613e3afb7a42d92a61618620457'
-        },
-        'maxRedirects': 20
-    };
-
-    var req = getDa.request(options, function (res) {
-        var chunks = [];
-
-        res.on("data", function (chunk) {
-            chunks.push(chunk);
-        });
-
-        res.on("end", function (chunk) {
-            var body = Buffer.concat(chunks);
-            callback(body.toString());
-        });
-
-        res.on("error", function (error) {
-            console.error(error);
-        });
-    });
-
-    req.end();
-}
-
-
-function downloadGoGo(link, title, epNum, img, desc) {
-    getData("https://www1.gogoanime.ai/" + link.slice(9) + "-episode-" + epNum, function (data) {
-        root = htmlparser.parse(data)
-        getData(root.querySelector(".streamtape a").attrs["data-video"], function (data) {
-            var a = data.split("document.getElementById('vid'+'eolink').innerHTML =")[1].split("</script>")[0]
-            var edited = ("https:"+a.replace(/['"+; ]+/g, '').trim()).substring(22)
-            console.log(edited)
-            downloadQueue.push([edited, title, "Episode " + epNum, img, desc]);
-            checkDownloadStarted();
-        })
-    })
-
 }
 
 function checkIfDownloaded(title, epName, callback) {
@@ -157,15 +69,60 @@ function checkIfDownloaded(title, epName, callback) {
     })
 }
 
+function continueDownload(link, title,videoID) {
+    vidp = path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4"
+    fs.stat(vidp, (err, stat) => {
+        //if(err) return getEP(link, title, videoID, 0)
+        return getEP(link, title, videoID, stat.size)
+    })
+}
+
+function pipeDownload(inStream, fileStream, videoID, link, title) {
+    videoID = videoID;
+    const fs = require('fs');
+    fileStream = fileStream;
+    // get total size of the file
+    let size = inStream.headers['content-length']
+    console.log(size);
+    let written = 0;
+    if(inStream.statusCode.toString()[0] != '2') return console.log(`Server responded with ${inStream.status} (${inStream.statusText})`)
+    inStream.on('data', data => {
+        clearTimeout(timeout)
+        timeout = setTimeout(() => {
+            console.log("Timed out?")
+            inStream.destroy();
+            continueDownload(link, title, videoID);
+        }, 10000)
+        // do the piping manually here.
+        fileStream.write(data, () => {
+            written += data.length;
+            var percent = (written / size * 100).toFixed(2);
+            if (document.getElementById("progress-bar")) {
+                document.getElementById("progress-bar").value = percent;
+                document.getElementById("download-percent").innerHTML = percent + "%";
+            }
+            //console.log(`written ${written} of ${size} bytes (${(written / size * 100).toFixed(2)}%)`);
+        });
+    });
+        inStream.on('end', () => {
+            clearTimeout(timeout);  
+            downloadFinished(videoID)
+        })
+    inStream.on('error', (err) => {
+        console.log(err)
+        clearTimeout(timeout)
+        inStream.destroy();
+    })
+}
+
 function downloadEpisode(link, title, epName, image, desc) {
     electron.ipcRenderer.invoke('show-notification', "Starting Download", title + " " + epName);
     videoID = uuid.v4()
-    console.log("https://genoanime.com"+image.substring(1))
     if (!fs.existsSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"))) {
         fs.mkdirSync(path + "/episodes/" + title.replace(/[\W_]+/g, "-"));
+        console.log(image)
         // Doesn't matter if this happens before or after, so save me the trouble of doing callbacks for the rest lol
-        console.log("https://genoanime.com"+image.substring(1))
-        https.get("https://genoanime.com"+image.substring(1), function (response) {
+        https.get(image, function (response) {
             response.pipe(fs.createWriteStream(path + "/images/" + title.replace(/[\W_]+/g, "-") + ".jpg"))
         }).end();
     }
@@ -216,49 +173,26 @@ function downloadEpisode(link, title, epName, image, desc) {
             return getEP(link, title, videoID, 0);
         })
     })
-
-
 }
-function continueDownload(link, title,videoID) {
-    vidp = path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4"
-    fs.stat(vidp, (err, stat) => {
-        //if(err) return getEP(link, title, videoID, 0)
-        return getEP(link, title, videoID, stat.size)
-    })
-}
-timeout = null
+
 function getEP(link, title, videoID, start) {
-    console.log(link)
-    if (settings.scrape == "twist") {
-        var options = {
-            'method': 'GET',
-            'hostname': 'cdn.twist.moe',
-            'path': link,
-            'headers': {
-                'Accept-Encoding': 'identity;q=1, *;q=0',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0',
-                'Range': `bytes=${start}-`,
-                'Referer': 'https://twist.moe/',
-            },
-            'maxRedirects': 100
-        };
-    } else if (settings.scrape == "geno") {
-        var newrl = new URL(link)
-        var options = {
-            'method': 'GET',
-            'hostname': newrl.hostname,
-            'path': newrl.pathname,
-            'headers': {
-                'Accept-Encoding': 'identity;q=1, *;q=0',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0',
-                'Range': `bytes=${start}-`,
-                'Referer': 'https://twist.moe/',
-                'Keep-Alive': 'timeout=10000'
-            },
-            'maxRedirects': 100
-        };
-        console.log(newrl)
-    }
+    console.log(link.substring(40))
+    var options = {
+        'method': 'GET',
+        'hostname': 'workfields.backup-server222.lol',
+        'path': link.substring(39),//'/7d2473746a243c24296b63626f673429706f62636975294c4b6b68756b724a41574a674e76723055297573642937286b7632242a2475727463676b63744f62243c245f69737273646347686f6b63247b',
+        'headers': {
+        },
+        'maxRedirects': 20
+      };
+    /*var options = {
+        'method': 'GET',
+        'hostname': 'workfields.backup-server222.lol',
+        'path': link.substring(29),
+        'headers': {
+        },
+        'maxRedirects': 100
+    };*/
     var getVid = require('follow-redirects').https;
     if (start == 0) {
         file = fs.createWriteStream(path + "/episodes/" + title.replace(/[\W_]+/g, "-") + "/" + videoID + ".mp4");
@@ -287,42 +221,6 @@ function getEP(link, title, videoID, start) {
 
 }
 
-function pipeDownload(inStream, fileStream, videoID, link, title) {
-    videoID = videoID;
-    const fs = require('fs');
-    fileStream = fileStream;
-    // get total size of the file
-    let size = inStream.headers['content-length']
-    let written = 0;
-    if(inStream.statusCode.toString()[0] != '2') return console.log(`Server responded with ${inStream.status} (${inStream.statusText})`)
-    inStream.on('data', data => {
-        clearTimeout(timeout)
-        timeout = setTimeout(() => {
-            console.log("Timed out?")
-            inStream.destroy();
-            continueDownload(link, title, videoID);
-        }, 10000)
-        // do the piping manually here.
-        fileStream.write(data, () => {
-            written += data.length;
-            var percent = (written / size * 100).toFixed(2);
-            if (document.getElementById("progress-bar")) {
-                document.getElementById("progress-bar").value = percent;
-                document.getElementById("download-percent").innerHTML = percent + "%";
-            }
-            //console.log(`written ${written} of ${size} bytes (${(written / size * 100).toFixed(2)}%)`);
-        });
-    });
-        inStream.on('end', () => {
-            clearTimeout(timeout);
-            downloadFinished(videoID)
-        })
-    inStream.on('error', (err) => {
-        console.log(err)
-        clearTimeout(timeout)
-        inStream.destroy();
-    })
-}
 
 downloadFinished = function (videoID) {
     link = downloadQueue[0][0];

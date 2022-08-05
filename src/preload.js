@@ -10,7 +10,7 @@ window.addEventListener('DOMContentLoaded', () => {
         settings = {
             devMode : false,
             openExternal : false,
-            scrape: "geno"
+            scrape: ""
         }
         anime = {settings: settings, anime: [], recent : []}
         fs.appendFile(path+"/data.json", JSON.stringify(anime), function (err) {
