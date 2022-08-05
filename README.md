@@ -1,6 +1,6 @@
 # Anishelf
 
-Anishelf is an electron application that downloads anime episodes. I couldn't find any pre-existing anime downloader that had a clean UI, so I decided to create my own. This was my first time using electron.js. It scrapes episodes from twist.moe or genoanime.com, and can be set in settings (genoanime tends to work better).
+Anishelf is an electron application that downloads anime episodes. I couldn't find any pre-existing anime downloader that had a clean UI, so I decided to create my own. This was my first project using electron.js. It scrapes episodes from allanime.
 
 
 ![Home](https://github.com/danielsodium/AniShelf/blob/main/assets/images/home.jpg)
@@ -19,7 +19,8 @@ Download the and unzip latest zip file from [releases](https://github.com/daniel
 
 ## To do
 
- - Add scraping from Animixplay
+- Add more sites to scrape
+- Make the code not doo doo
 
 ## Playing episodes
 
